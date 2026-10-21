@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Grid cover</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;family=IBM+Plex+Sans:wght@400;500&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 560px; height: 794px; box-sizing: border-box; background: #A3B4C2; color: #111418; font-family: 'IBM Plex Sans', Arial, sans-serif; padding: 44px 44px 40px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: auto 1fr auto; column-gap: 16px">
+<div style="grid-column: span 3; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase">Marginalia</div>
+<div style="grid-column: span 3; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; text-align: right">Oct 2026</div>
+<div style="grid-column: span 6; align-self: center; font-size: 300px; font-weight: 500; line-height: 0.8; letter-spacing: -0.05em; margin-left: -10px">01</div>
+<div style="grid-column: span 6; border-top: 2px solid #111418; padding-top: 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; row-gap: 12px">
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 15px; line-height: 1.3"><span style="display: block; font-family: 'IBM Plex Sans', Arial, sans-serif; font-size: 10px; letter-spacing: 0.1em">03</span>The Slow Return of the Hedgerow</div>
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 15px; line-height: 1.3"><span style="display: block; font-family: 'IBM Plex Sans', Arial, sans-serif; font-size: 10px; letter-spacing: 0.1em">11</span>What the Night Shift Knows</div>
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 15px; line-height: 1.3"><span style="display: block; font-family: 'IBM Plex Sans', Arial, sans-serif; font-size: 10px; letter-spacing: 0.1em">19</span>On Repairing Things</div>
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 15px; line-height: 1.3"><span style="display: block; font-family: 'IBM Plex Sans', Arial, sans-serif; font-size: 10px; letter-spacing: 0.1em">27</span>A Short History of the Index Card</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":560,"height":794}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+/* House B · Grid. Modern Swiss: Source Serif 4 and IBM Plex Sans, a six-column grid, ragged right. */
+
+.house-b-grid {
+  --serif: 'Source Serif 4', Georgia, serif;
+  --sans: 'IBM Plex Sans', Arial, sans-serif;
+  --paper: #ffffff;
+  --ink: #111418;
+  --muted: #4A5866;
+  --house-accent: #4A5866;
+  --rule: #111418;
+  --tint: #E3E8EC;
+  --body-size: 10.5pt;
+  --leading: 1.55;
+  --title-size: 27pt;
+  --title-weight: 600;
+  --dek-size: 13pt;
+}
+.print .house-b-grid { --muted: #555; --house-accent: #555; --tint: #e6e6e6; }
+
+/* Cover */
+.cover-b {
+  background: var(--cover);
+  color: #111418;
+  font-family: var(--sans);
+  padding: 12mm 12mm 11mm;
+}
+.cover-b .cover-top { display: flex; justify-content: space-between; font-size: 8.25pt; letter-spacing: 0.1em; text-transform: uppercase; }
+.cover-b .cover-top span:nth-child(2) { font-weight: 500; }
+.cover-b .cover-num { flex: 1; display: flex; align-items: center; font-size: 225pt; font-weight: 500; line-height: 0.8; letter-spacing: -0.05em; margin-left: -2.6mm; }
+.cover-b .cover-list { border-top: 1.5pt solid #111418; padding-top: 3.7mm; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 4mm; row-gap: 3.2mm; }
+.cover-b .toc-link { display: block; font-family: var(--serif); font-size: 11.25pt; line-height: 1.3; }
+.cover-b .toc-link::before { content: target-counter(attr(href), page, decimal-leading-zero); display: block; font-family: var(--sans); font-size: 7.5pt; letter-spacing: 0.1em; }
+.cover-b .toc-link::after { content: none; }
+
+/* Contents */
+.house-b-grid .contents-title { font-family: var(--sans); font-size: 7.5pt; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0 0 24mm; }
+.house-b-grid .toc { border-top: 0.75pt solid var(--ink); padding-top: 4mm; }
+.house-b-grid .toc-link { grid-template-columns: 2.4em 1fr auto; font-size: 12pt; line-height: 1.3; }
+.house-b-grid .toc-n { font-family: var(--sans); font-size: 7.5pt; letter-spacing: 0.08em; color: var(--muted); }
+.house-b-grid .toc-who { font-family: var(--sans); font-size: 8pt; margin-top: 0.8mm; }
+.house-b-grid .toc-link::after { font-family: var(--sans); font-size: 8pt; font-weight: 500; }
+
+/* Opener */
+.house-b-grid .label-row { display: flex; justify-content: space-between; font-family: var(--sans); font-size: 7.5pt; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 30mm; }
+.house-b-grid .pg::before { content: target-counter(attr(href), page, decimal-leading-zero); }
+.house-b-grid .article-title { letter-spacing: -0.015em; line-height: 1.05; }
+.house-b-grid .dek-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); column-gap: 4mm; margin-top: 4.8mm; padding-top: 3.2mm; border-top: 0.75pt solid var(--ink); }
+.house-b-grid .dek-row .dek { grid-column: span 4; margin: 0; font-size: 11.5pt; line-height: 1.4; color: #2B333B; }
+.house-b-grid .dek-row .byline { grid-column: span 2; margin: 0; font-family: var(--sans); font-size: 8.25pt; line-height: 1.5; color: var(--muted); }
+.print .house-b-grid .dek-row .dek { color: #222; }
+.house-b-grid .article-head { margin-bottom: 9mm; }
+/* The house carries its own rule under the title; a skin's rule goes under the dek row. */
+.house-b-grid .article[data-rule] .article-head { border-bottom: 0; padding-bottom: 0; }
+.house-b-grid .article[data-rule="thick"] .dek-row { border-top-width: 2pt; }
+.house-b-grid .article[data-rule="double"] .dek-row { border-top: 2.4pt double var(--ink); }
+.house-b-grid .article[data-rule="none"] .dek-row { border-top: 0; }
+
+/* Body: ragged right, space between paragraphs, no indents */
+.house-b-grid .article-body { text-align: left; hyphens: auto; }
+/* Ragged right: a paragraph split across pages must not stretch its last line. */
+.house-b-grid [data-split-to] { text-align-last: auto !important; }
+.house-b-grid .article-body p.cont { margin-top: 0.65em; }
+.house-b-grid .lead { font-weight: 600; }
+.house-b-grid .article[data-opener="dropcap"] .article-body p.first:not([data-split-from])::first-letter {
+  /* A float, not initial-letter: Paged.js can't measure initial-letter and paginates around it wrongly. */
+  float: left; font-size: calc(var(--body-size) * var(--leading) * 2.72); line-height: 0.8; margin-top: 0.04em; font-weight: 600; padding-right: 1.5mm; color: var(--accent); }
+.house-b-grid .article[data-opener="smallcaps"] .article-body p.first:not([data-split-from])::first-line { font-variant: small-caps; letter-spacing: 0.05em; }
+.house-b-grid .article-body h2, .house-b-grid .article-body h3 { font-family: var(--sans); font-size: 9pt; font-weight: 500; letter-spacing: 0.04em; margin: 1.3em 0 0.4em; }
+.house-b-grid .article-body blockquote { font-size: 0.95em; border-left: 0.75pt solid var(--ink); padding-left: 3.5mm; margin-left: 0; }
+
+.house-b-grid .article-body figure { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); column-gap: 4mm; margin: 6mm 0; }
+.house-b-grid .article-body figure img { grid-column: 1 / span 4; width: 100%; margin: 0; }
+.house-b-grid .article-body figure:not(:has(figcaption)) img { grid-column: 1 / -1; }
+.house-b-grid .article-body figcaption { grid-column: 5 / span 2; align-self: end; margin: 0; font-family: var(--sans); font-size: 8pt; line-height: 1.45; color: var(--muted); }
+
+.house-b-grid .article-body hr::after { content: "—"; letter-spacing: 0; }
+.house-b-grid .end-mark::after { font-size: 0.7em; vertical-align: 0.1em; }
+
+.house-b-grid .source-note { font-family: var(--sans); font-size: 8pt; color: var(--muted); border-top: 0.75pt solid var(--ink); padding-top: 2mm; }
+
+.house-b-grid .colophon { font-family: var(--sans); font-size: 8.25pt; }
+.house-b-grid .colophon-title { font-family: var(--serif); font-weight: 600; }
+.house-b-grid .colophon .col-title { font-family: var(--serif); font-size: 9.5pt; }
+.house-b-grid .back-mark { font-family: var(--sans); }
+
+/* Running heads and folios */
+@page :left {
+  @top-left { content: string(title); font-family: 'IBM Plex Sans', Arial, sans-serif; font-size: 7.5pt; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #4A5866; vertical-align: bottom; padding-bottom: 6mm; }
+  @top-right { content: string(section); font-family: 'IBM Plex Sans', Arial, sans-serif; font-size: 7.5pt; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #4A5866; vertical-align: bottom; padding-bottom: 6mm; }
+  @bottom-left { content: counter(page); font-family: 'IBM Plex Sans', Arial, sans-serif; font-size: 7.5pt; font-weight: 500; color: #111418; vertical-align: top; padding-top: 6mm; }
+  @bottom-right { content: string(issue); font-family: 'IBM Plex Sans', Arial, sans-serif; font-size: 7.5pt; color: #4A5866; vertical-align: top; padding-top: 6mm; }
+}
+@page :right {
+  @top-left { content: string(section); font-family: 'IBM Plex Sans', Arial, sans-serif; font-size: 7.5pt; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #4A5866; vertical-align: bottom; padding-bottom: 6mm; }
+  @top-right { content: string(title); font-family: 'IBM Plex Sans', Arial, sans-serif; font-size: 7.5pt; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #4A5866; vertical-align: bottom; padding-bottom: 6mm; }
+  @bottom-left { content: string(issue); font-family: 'IBM Plex Sans', Arial, sans-serif; font-size: 7.5pt; color: #4A5866; vertical-align: top; padding-top: 6mm; }
+  @bottom-right { content: counter(page); font-family: 'IBM Plex Sans', Arial, sans-serif; font-size: 7.5pt; font-weight: 500; color: #111418; vertical-align: top; padding-top: 6mm; }
+}
+.print .pagedjs_margin-content { color: #555 !important; }
+
+/* Paged.js moves notes out of .book into the page's footnote area, where the
+   house variables don't reach, so the note face is named here. */
+.fn { font-family: 'IBM Plex Sans', Arial, sans-serif; color: #222; }

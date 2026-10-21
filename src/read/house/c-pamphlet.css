@@ -1,0 +1,84 @@
+/* House C · Pamphlet. Classical and centred: Literata, spaced capitals, roman numerals, a fleuron. */
+
+.house-c-pamphlet {
+  --serif: 'Literata', Georgia, serif;
+  --paper: #FAF8F4;
+  --ink: #1C1B19;
+  --muted: #5C5850;
+  --house-accent: #1C1B19;
+  --rule: #1C1B19;
+  --body-size: 10.5pt;
+  --leading: 1.6;
+  --title-size: 17pt;
+  --title-weight: 400;
+  --dek-size: 13pt;
+}
+.print .house-c-pamphlet { --ink: #111; --muted: #444; --house-accent: #111; --rule: #111; }
+
+.house-c-pamphlet .short-rule { width: 10.5mm; height: 0; border-top: 0.75pt solid var(--rule); margin: 4.8mm auto 0; }
+
+/* Cover */
+.cover-c { background: var(--cover); color: #1C1B19; padding: 17mm 14.8mm; align-items: center; text-align: center; }
+.cover-c .cover-top, .cover-c .cover-foot { font-size: 9pt; letter-spacing: 0.3em; text-transform: uppercase; }
+.cover-c .cover-mid { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+.cover-c .short-rule { width: 14.8mm; border-color: #1C1B19; margin: 0 auto; }
+.cover-c .cover-title { margin: 7.4mm 0 0; font-size: 33pt; font-weight: 400; letter-spacing: 0.22em; text-transform: uppercase; padding-left: 0.22em; }
+.cover-c .cover-tagline { margin: 4.2mm 0 7.4mm; font-size: 12pt; font-style: italic; }
+
+/* Contents */
+.house-c-pamphlet .contents { text-align: center; }
+.house-c-pamphlet .contents-title { font-size: 9pt; font-weight: 400; letter-spacing: 0.3em; text-transform: uppercase; margin: 22mm 0 14mm; }
+.house-c-pamphlet .toc-link { display: block; text-align: center; }
+.house-c-pamphlet .toc-n { display: none; }
+.house-c-pamphlet .toc-title { display: block; font-size: 10pt; letter-spacing: 0.14em; text-transform: uppercase; }
+.house-c-pamphlet .toc-who { display: block; font-style: italic; font-size: 9.5pt; margin-top: 0.8mm; }
+.house-c-pamphlet .toc-link::after { display: block; content: "· " target-counter(attr(href), page) " ·"; font-size: 9pt; margin-top: 0.8mm; }
+.house-c-pamphlet .toc li { margin-bottom: 7mm; }
+
+/* Opener */
+.house-c-pamphlet .article-head { padding-top: 11mm; text-align: center; margin-bottom: 10.5mm; }
+.house-c-pamphlet .art-num { font-size: 9.75pt; letter-spacing: 0.3em; }
+.house-c-pamphlet .article-title { margin-top: 4.8mm; letter-spacing: 0.16em; text-transform: uppercase; line-height: 1.4; padding-left: 0.16em; }
+.house-c-pamphlet .article[data-title-case="small-caps"] .article-title { text-transform: none; }
+.house-c-pamphlet .dek { font-size: 11pt; font-style: italic; margin-top: 4mm; }
+.house-c-pamphlet .byline { font-size: 10.5pt; font-style: italic; margin-top: 3.7mm; }
+.house-c-pamphlet .article[data-rule] .article-head { border-bottom: 0; padding-bottom: 0; }
+.house-c-pamphlet .article[data-rule="none"] .short-rule { display: none; }
+.house-c-pamphlet .article[data-rule="thick"] .short-rule { border-top-width: 2pt; }
+.house-c-pamphlet .article[data-rule="double"] .short-rule { border-top: 2.4pt double var(--rule); }
+
+/* Body: justified, indented, small-caps first line */
+.house-c-pamphlet .article-body { text-align: justify; }
+.house-c-pamphlet .article-body p.cont { text-indent: 1.5em; }
+.house-c-pamphlet .article:not([data-opener]) .article-body p.first:not([data-split-from])::first-line,
+.house-c-pamphlet .article[data-opener="smallcaps"] .article-body p.first:not([data-split-from])::first-line { font-variant: small-caps; letter-spacing: 0.06em; }
+.house-c-pamphlet .article[data-opener="dropcap"] .article-body p.first:not([data-split-from])::first-letter {
+  /* A float, not initial-letter: Paged.js can't measure initial-letter and paginates around it wrongly. */
+  float: left; font-size: calc(var(--body-size) * var(--leading) * 2.72); line-height: 0.8; margin-top: 0.04em; padding-right: 1.8mm; }
+.house-c-pamphlet .lead { font-variant: small-caps; letter-spacing: 0.06em; }
+.house-c-pamphlet .article-body h2, .house-c-pamphlet .article-body h3 { text-align: center; font-size: 9.5pt; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; margin: 1.8em 0 0.8em; }
+.house-c-pamphlet .article-body hr { margin: 5.3mm 0 3.7mm; }
+.house-c-pamphlet .article-body hr::after { content: "* * *"; letter-spacing: 0.6em; font-size: 9pt; }
+.house-c-pamphlet .article-body figure { margin: 5.8mm 6.4mm 4.8mm; }
+.house-c-pamphlet .article-body figcaption { text-align: center; font-style: italic; color: #4A4740; }
+.print .house-c-pamphlet .article-body figcaption { color: #333; }
+.house-c-pamphlet .end-mark { display: block; text-align: center; text-indent: 0; margin-top: 4.2mm; }
+.house-c-pamphlet .end-mark::after { padding: 0; font-size: 10.5pt; }
+
+.house-c-pamphlet .source-note { text-align: center; font-style: italic; color: #4A4740; }
+.print .house-c-pamphlet .source-note { color: #333; }
+
+.house-c-pamphlet .colophon { text-align: center; }
+.house-c-pamphlet .colophon ol { list-style: none; padding: 0; }
+.house-c-pamphlet .colophon-title { letter-spacing: 0.22em; text-transform: uppercase; font-size: 11pt; margin-top: 12mm; }
+
+/* Running head: centred tracked capitals. Folio: centred, between points. */
+@page {
+  @top-center { content: string(title); font-family: 'Literata', Georgia, serif; font-size: 8.25pt; letter-spacing: 0.24em; text-transform: uppercase; color: #5C5850; vertical-align: bottom; padding-bottom: 7mm; }
+  @bottom-center { content: "· " counter(page) " ·"; font-family: 'Literata', Georgia, serif; font-size: 9pt; color: #1C1B19; vertical-align: top; padding-top: 6mm; }
+}
+.print .pagedjs_page.house-c .pagedjs_margin-content { color: #333 !important; }
+
+/* Paged.js moves notes out of .book into the page's footnote area, where the
+   house variables don't reach, so the note face is named here. */
+.fn { font-family: 'Literata', Georgia, serif; color: #222; }

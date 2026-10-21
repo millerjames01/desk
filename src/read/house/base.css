@@ -1,0 +1,186 @@
+/*
+ * Base template: page, grid, pagination. Identical in every issue and under
+ * every house style (brief §6). House files set tokens and flourishes only;
+ * skins set --accent and --ornament per article.
+ */
+
+@page {
+  size: A5;
+  margin: 18mm 15mm 20mm 17mm;
+}
+@page :left { margin-left: 15mm; margin-right: 17mm; }
+@page :right { margin-left: 17mm; margin-right: 15mm; }
+@page cover { margin: 0; }
+@page front { }
+
+.book {
+  --paper: #fff;
+  --ink: #111;
+  --muted: #555;
+  --accent: var(--house-accent, #444);
+  --rule: #bbb;
+  --ornament: "■";
+  font-family: var(--serif);
+  color: var(--ink);
+  font-size: var(--body-size);
+  line-height: var(--leading);
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Strings for running heads. Kept in the flow but takes no space. */
+.rh-issue { string-set: issue content(text); }
+.rh-title { string-set: title content(text); }
+.rh-section { string-set: section content(text); }
+.rh-issue, .rh-title, .rh-section {
+  position: absolute;
+  width: 0;
+  display: block;
+  height: 0;
+  overflow: hidden;
+  font-size: 0;
+  line-height: 0;
+  margin: 0;
+}
+
+/* ---------- Cover, contents, back ---------- */
+
+.cover, .back-cover {
+  page: cover;
+  break-before: page;
+  box-sizing: border-box;
+  /* Paged.js loses about 3 mm on a margin-free page; taller splits the cover. */
+  height: 206mm;
+  padding: 14mm 13mm 13mm;
+  display: flex;
+  flex-direction: column;
+  break-inside: avoid;
+}
+.cover { break-before: avoid; }
+.cover ul, .cover ol { list-style: none; margin: 0; padding: 0; }
+.cover a, .contents a, .article-head a { color: inherit; text-decoration: none; }
+
+.contents { page: front; break-before: page; }
+.contents ol { list-style: none; margin: 0; padding: 0; }
+.toc-link { display: grid; grid-template-columns: 1.6em 1fr auto; column-gap: 0.6em; align-items: baseline; }
+.toc-link::after { content: target-counter(attr(href), page); font-variant-numeric: tabular-nums; }
+.toc-title { grid-column: 2; }
+.toc-who { grid-column: 2; grid-row: 2; font-size: 8.5pt; color: var(--muted); }
+.toc li { margin: 0 0 4.5mm; break-inside: avoid; }
+
+/* ---------- Articles ---------- */
+
+.article { break-before: page; }
+.recto-starts .article { break-before: right; }
+
+.article-head { margin: 0 0 7mm; }
+.article-title {
+  font-weight: var(--title-weight, 400);
+  font-size: var(--title-size);
+  line-height: 1.08;
+  margin: 0;
+  hyphens: manual;
+  break-after: avoid;
+}
+.dek { font-size: var(--dek-size); line-height: 1.35; margin: 4mm 0 0; hyphens: manual; }
+.byline { margin-top: 4mm; font-size: 9.5pt; }
+.kicker { color: var(--accent); }
+
+.article[data-title-case="small-caps"] .article-title { font-variant: small-caps; letter-spacing: 0.02em; }
+.article[data-title-case="uppercase-tracked"] .article-title { text-transform: uppercase; letter-spacing: 0.08em; font-size: calc(var(--title-size) * 0.72); line-height: 1.2; }
+
+.article[data-rule="hairline"] .article-head { border-bottom: 0.5pt solid var(--accent); padding-bottom: 5mm; }
+.article[data-rule="thick"] .article-head { border-bottom: 2pt solid var(--accent); padding-bottom: 5mm; }
+.article[data-rule="double"] .article-head { border-bottom: 2.4pt double var(--accent); padding-bottom: 5mm; }
+.article[data-rule="none"] .article-head { border-bottom: 0; padding-bottom: 0; }
+
+.article-body {
+  hyphens: auto;
+  orphans: 3;
+  widows: 3;
+}
+.article-body p { margin: 0; orphans: 3; widows: 3; }
+.article-body h2, .article-body h3 {
+  break-after: avoid;
+  break-inside: avoid;
+  font-size: 9.75pt;
+  line-height: 1.35;
+  margin: 1.4em 0 0.5em;
+  hyphens: manual;
+}
+.article-body blockquote { margin: 0.8em 0 0.8em 1.4em; padding: 0; }
+.article-body ul, .article-body ol { margin: 0.6em 0; padding-left: 1.4em; }
+.article-body li { margin: 0.2em 0; }
+.article-body a { color: inherit; text-decoration: none; }
+.article-body sup, .article-body sub { line-height: 0; font-size: 0.7em; }
+.article-body code { font-size: 0.9em; }
+.article-body pre { white-space: pre-wrap; font-size: 8.5pt; }
+
+/* Figures: full width, between paragraphs, never floated. */
+.article-body figure { margin: 5mm 0; break-inside: avoid; }
+.article-body img { display: block; max-width: 100%; max-height: 77mm; margin: 0 auto; object-fit: contain; }
+.article-body img.remote { filter: grayscale(1); }
+.article-body figcaption { font-size: 8.75pt; line-height: 1.4; margin-top: 2mm; color: var(--muted); }
+
+.article-body table { width: 100%; border-collapse: collapse; font-size: 8.5pt; line-height: 1.35; margin: 4mm 0; }
+.article-body td, .article-body th { border-bottom: 0.5pt solid var(--rule); padding: 1mm 1.5mm 1mm 0; text-align: left; vertical-align: top; }
+
+.article-body hr { border: 0; margin: 1.2em 0; text-align: center; break-after: avoid; }
+.article-body hr::after { content: "* * *"; letter-spacing: 0.6em; font-size: 9pt; }
+
+/* A paragraph continued from the previous page is not a new paragraph. */
+.article-body [data-split-from] { text-indent: 0 !important; }
+
+/* Paged.js justifies the last line of a split element so a paragraph broken
+   across pages stays flush. On a split container that leaks into every child,
+   so only the split element itself keeps it. */
+.book *:not([data-split-to]) { text-align-last: auto; }
+
+
+.end-mark::after { content: var(--ornament); color: var(--accent); padding-left: 0.5em; font-size: 0.85em; }
+
+/* No break-before: avoid here. Paged.js honours it by backing up to the previous
+   sibling, the whole article body, and loops ("Layout repeated"). */
+.source-note { font-size: 8.5pt; line-height: 1.45; color: var(--muted); margin: 8mm 0 0; break-inside: avoid; hyphens: manual; }
+
+/* Footnotes, where the source has them. */
+.fn { float: footnote; display: block; font-size: 8pt; line-height: 1.35; text-indent: 0; text-align: left; hyphens: manual; }
+/* The rule above the notes is part of the first note, so Paged.js measures it. */
+.fn:first-child { border-top: 0.5pt solid #999; padding-top: 1.5mm; margin-top: 3mm; }
+.fn::footnote-call { content: none; }
+.fn::footnote-marker { content: none; }
+.fn-ref { font-size: 0.65em; line-height: 0; }
+/* The footnote rule is drawn in book.css, only on pages that have notes:
+   an @footnote margin here would shrink every page, the cover included. */
+
+/* ---------- Padding, colophon ---------- */
+
+.pad { break-before: page; }
+.pad-fill { height: 20mm; }
+.pad-notes h2 { font-size: 9pt; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500; margin: 0 0 6mm; }
+.pad-notes .ruled { height: 150mm; background: repeating-linear-gradient(to bottom, transparent 0, transparent 7.5mm, #999 7.5mm, #999 7.75mm); }
+
+.colophon { break-before: page; font-size: 8.75pt; line-height: 1.45; }
+.colophon-title { font-size: 14pt; font-weight: 400; margin: 0 0 4mm; }
+.colophon h3 { font-size: 8.5pt; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; margin: 7mm 0 3mm; }
+.colophon ol { margin: 0; padding-left: 1.2em; }
+.colophon li { margin: 0 0 3mm; break-inside: avoid; }
+.col-url { font-size: 7.5pt; color: var(--muted); word-break: break-all; hyphens: none; }
+
+.back-cover { justify-content: flex-end; align-items: center; }
+.back-mark { font-size: 8pt; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+
+/* ---------- Margin boxes: folios and running heads ---------- */
+
+@page cover {
+  @top-left { content: none; } @top-center { content: none; } @top-right { content: none; }
+  @bottom-left { content: none; } @bottom-center { content: none; } @bottom-right { content: none; }
+}
+@page front {
+  @top-left { content: none; } @top-center { content: none; } @top-right { content: none; }
+  @bottom-left { content: none; } @bottom-center { content: none; } @bottom-right { content: none; }
+}
+/* Openers drop the running head (book.ts marks them). */
+.pagedjs_page.opener .pagedjs_margin-top > * { visibility: hidden; }
+.pagedjs_page.pad-page .pagedjs_margin > * { visibility: hidden; }

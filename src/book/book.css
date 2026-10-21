@@ -1,0 +1,63 @@
+/* The booklet page's own chrome. The booklet's typography is in src/read/house/. */
+
+html, body { margin: 0; padding: 0; }
+body { background: #8a8d91; font: 13px/1.4 system-ui, sans-serif; }
+
+#bar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  padding: 8px 12px; background: #1d1f22; color: #eee;
+}
+#bar select, #bar button { font: inherit; padding: 4px 10px; border-radius: 6px; border: 1px solid #555; background: #2b2e32; color: #eee; }
+#bar button { background: #e8e2d4; color: #111; border-color: #e8e2d4; font-weight: 600; cursor: pointer; }
+#bar .ok { color: #9fd3a8; }
+#bar .bad, #status.bad { color: #ff9b8a; }
+#bar .tip { color: #aaa; flex-basis: 100%; }
+#status { padding: 24px; color: #fff; font-size: 15px; }
+
+/* Screen preview: pages on a desk, paper tinted per house. */
+@media screen {
+  .pagedjs_pages { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 18px 0 40px; }
+  .pagedjs_page { background: #fff; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35); }
+  .body-a-review .pagedjs_page { background: #FBF8F1; }
+  .body-c-pamphlet .pagedjs_page { background: #FAF8F4; }
+  .pagedjs_page[style*='--card'] { background: var(--card) !important; }
+  .print .pagedjs_page { background: #fff !important; }
+
+  .sheets { display: flex; flex-direction: column; align-items: center; gap: 22px; padding: 18px 0 40px; }
+  .sheet { background: #fff; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35); position: relative; }
+  .sheet::before { content: attr(data-label); position: absolute; top: -17px; left: 0; color: #fff; font-size: 11px; }
+  .slot.left { border-right: 1px dashed #ccc; }
+
+  .contact { display: grid; grid-template-columns: repeat(8, 37mm); gap: 6mm 4mm; padding: 10mm; justify-content: center; }
+  .contact figure { margin: 0; }
+  .contact figure > .pagedjs_pages { width: 37mm; height: 52.5mm; overflow: hidden; padding: 0; display: block; background: #fff; }
+  .contact figcaption { color: #fff; text-align: center; font-size: 10px; margin-top: 2px; }
+}
+
+
+/* The cover card supplies the colour; on paper the cover prints in black only. */
+.print .cover { background: none !important; }
+
+/* Print sheets: A4 landscape, two A5 slots, nothing else. */
+.sheet { display: flex; width: 297mm; height: 210mm; overflow: hidden; break-after: page; }
+.sheet:last-child { break-after: auto; }
+.slot { width: 148.5mm; height: 210mm; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+.slot > .pagedjs_pages { display: block !important; width: 148mm !important; height: 210mm !important; min-height: 0 !important; max-height: none !important; margin: 0 !important; padding: 0 !important; overflow: visible; }
+.slot .pagedjs_page, .contact .pagedjs_page {
+  margin: 0 !important; height: 210mm !important; min-height: 0 !important; max-height: none !important;
+  break-after: auto !important; page-break-after: auto !important; box-shadow: none !important;
+}
+.contact .pagedjs_page { transform: scale(0.25); transform-origin: top left; }
+
+@media print {
+  #bar, #status { display: none !important; }
+  body { background: none; }
+  .sheet { box-shadow: none; }
+  .slot.left { border: 0; }
+  .contact { display: grid; grid-template-columns: repeat(8, 31mm); gap: 4mm 3mm; }
+  .contact figure { margin: 0; break-inside: avoid; }
+  .contact figure > .pagedjs_pages { width: 31mm !important; height: 44mm !important; overflow: hidden; display: block !important; }
+  .contact .pagedjs_page { transform: scale(0.2095); }
+  .contact figcaption { font-size: 7pt; text-align: center; }
+}

@@ -1,0 +1,84 @@
+/* House A · Review. A literary quarterly: EB Garamond, justified, drop caps, warm paper. */
+
+.house-a-review {
+  --serif: 'EB Garamond', Garamond, Georgia, serif;
+  --paper: #FBF8F1;
+  --ink: #1A1712;
+  --muted: #4F4636;
+  --house-accent: #6B5A33;
+  --rule: #D8CDB4;
+  --body-size: 11pt;
+  --leading: 1.5;
+  --title-size: 28.5pt;
+  --title-weight: 400;
+  --dek-size: 13.5pt;
+}
+/* The interior prints in black and grey only. */
+.print .house-a-review { --ink: #111; --muted: #444; --house-accent: #555; --rule: #aaa; }
+
+/* Cover */
+.cover-a { background: var(--cover); color: #1A1712; padding: 14.8mm 13.8mm 12.7mm; }
+.cover-a .cover-top { display: flex; justify-content: space-between; font-size: 9.75pt; letter-spacing: 0.14em; text-transform: uppercase; padding-bottom: 3.7mm; border-bottom: 0.75pt solid #1A1712; }
+.cover-a .cover-mid { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.cover-a .cover-title { margin: 0; font-size: 63pt; font-weight: 400; line-height: 0.95; letter-spacing: -0.01em; }
+.cover-a .cover-tagline { margin: 4.8mm 0 0; font-size: 15pt; font-style: italic; }
+.cover-a .cover-list { padding-bottom: 5.8mm; border-bottom: 0.75pt solid #1A1712; font-size: 11.25pt; line-height: 1.35; }
+.cover-a .cover-label { font-size: 9pt; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 2mm; }
+.cover-a .cover-list li { margin-bottom: 2.1mm; }
+.cover-a .toc-link { display: inline; }
+.cover-a .toc-link::after { content: none; }
+
+/* Contents */
+.house-a-review .contents-title { font-size: 9pt; font-weight: 400; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); margin: 7mm 0 12mm; padding-bottom: 2mm; border-bottom: 0.5pt solid var(--rule); }
+.house-a-review .toc-link { font-size: 12.5pt; line-height: 1.25; }
+.house-a-review .toc-n { font-size: 9pt; color: var(--accent); }
+.house-a-review .toc-who { font-size: 9pt; font-style: italic; }
+.house-a-review .toc-link::after { font-size: 10pt; color: var(--accent); }
+
+/* Opener */
+.house-a-review .article-head { padding-top: 7mm; }
+.house-a-review .kicker { font-size: 9pt; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 3.7mm; }
+.house-a-review .dek { font-style: italic; color: #3C3529; margin-top: 3.2mm; }
+.print .house-a-review .dek { color: #333; }
+.house-a-review .byline { font-size: 9.75pt; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 4.8mm; }
+
+/* Body: justified, indented, drop cap */
+.house-a-review .article-body { text-align: justify; }
+.house-a-review .article-body p.cont { text-indent: 1.4em; }
+.house-a-review .article[data-opener="dropcap"] .article-body p.first:not([data-split-from])::first-letter,
+.house-a-review .article:not([data-opener]) .article-body p.first:not([data-split-from])::first-letter {
+  /* A float, not initial-letter: Paged.js can't measure initial-letter and paginates around it wrongly. */
+  float: left; font-size: calc(var(--body-size) * var(--leading) * 2.72); line-height: 0.8; margin-top: 0.04em; padding-right: 1.8mm; color: var(--ink); }
+.house-a-review .article[data-opener="smallcaps"] .article-body p.first:not([data-split-from])::first-line { font-variant: small-caps; letter-spacing: 0.06em; }
+.house-a-review .lead { font-variant: small-caps; letter-spacing: 0.05em; }
+.house-a-review .article-body h2, .house-a-review .article-body h3 { font-size: 9.75pt; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; text-align: left; margin: 1.6em 0 0.6em; }
+.house-a-review .article-body blockquote { font-size: 0.95em; text-align: left; }
+.house-a-review .article-body figure { margin: 5.3mm 0 4.8mm; }
+.house-a-review .article-body figcaption { font-style: italic; text-align: left; color: var(--muted); }
+
+.house-a-review .source-note { border-top: 0.5pt solid var(--rule); padding-top: 2.6mm; color: var(--muted); }
+.house-a-review .src-label { letter-spacing: 0.12em; text-transform: uppercase; }
+
+.house-a-review .colophon-title { font-style: italic; }
+
+/* Running heads: italic, a hairline under, folio on the outside. Openers show the foot instead. */
+@page :left {
+  @top-left { content: counter(page); font-family: 'EB Garamond', Georgia, serif; font-size: 9pt; font-style: italic; color: #6B5A33; vertical-align: bottom; padding-bottom: 2mm; margin-bottom: 5mm; border-bottom: 0.75pt solid #D8CDB4; }
+  @top-right { content: string(title); font-family: 'EB Garamond', Georgia, serif; font-size: 9pt; font-style: italic; color: #6B5A33; vertical-align: bottom; padding-bottom: 2mm; margin-bottom: 5mm; border-bottom: 0.75pt solid #D8CDB4; }
+  @bottom-left { content: counter(page); font-family: 'EB Garamond', Georgia, serif; font-size: 9pt; color: #6B5A33; vertical-align: top; padding-top: 6mm; }
+  @bottom-right { content: string(issue); font-family: 'EB Garamond', Georgia, serif; font-size: 8.5pt; letter-spacing: 0.12em; text-transform: uppercase; color: #6B5A33; vertical-align: top; padding-top: 6mm; }
+}
+@page :right {
+  @top-left { content: string(issue); font-family: 'EB Garamond', Georgia, serif; font-size: 9pt; font-style: italic; color: #6B5A33; vertical-align: bottom; padding-bottom: 2mm; margin-bottom: 5mm; border-bottom: 0.75pt solid #D8CDB4; }
+  @top-right { content: counter(page); font-family: 'EB Garamond', Georgia, serif; font-size: 9pt; font-style: italic; color: #6B5A33; vertical-align: bottom; padding-bottom: 2mm; margin-bottom: 5mm; border-bottom: 0.75pt solid #D8CDB4; }
+  @bottom-left { content: string(issue); font-family: 'EB Garamond', Georgia, serif; font-size: 8.5pt; letter-spacing: 0.12em; text-transform: uppercase; color: #6B5A33; vertical-align: top; padding-top: 6mm; }
+  @bottom-right { content: counter(page); font-family: 'EB Garamond', Georgia, serif; font-size: 9pt; color: #6B5A33; vertical-align: top; padding-top: 6mm; }
+}
+.pagedjs_page.house-a:not(.opener) .pagedjs_margin-bottom > * { visibility: hidden; }
+.pagedjs_page.house-a.opener .pagedjs_margin-top > * { visibility: hidden; }
+.print .pagedjs_page.house-a .pagedjs_margin-content { color: #555 !important; }
+.print .pagedjs_page.house-a .pagedjs_margin-top > * { border-color: #aaa !important; }
+
+/* Paged.js moves notes out of .book into the page's footnote area, where the
+   house variables don't reach, so the note face is named here. */
+.fn { font-family: 'EB Garamond', Georgia, serif; font-size: 8.75pt; color: #222; }
