@@ -14,9 +14,6 @@
   --warn-bg: #f6ead0;
   --bad: #a2321f;
   --bad-bg: #f6dfd9;
-  --write: #6b5a33;
-  --read: #4a6a86;
-  --send: #9a4b3c;
   --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
   --sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
   color-scheme: light;
@@ -37,9 +34,6 @@
     --warn-bg: #3a2f18;
     --bad: #f0a08f;
     --bad-bg: #3d221c;
-    --write: #cdb47a;
-    --read: #8fb3d3;
-    --send: #e09a8a;
     color-scheme: dark;
   }
 }
@@ -83,10 +77,6 @@ code { font-size: 0.9em; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
 .card.inset { margin: 12px 0 0; background: var(--paper); }
 .card > h3:first-child { margin-top: 0; }
-.cards3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.tile { text-decoration: none; color: inherit; display: block; }
-.tile:hover { border-color: var(--accent); }
-.big { font-family: var(--serif); font-size: 2.6rem; margin: 0; line-height: 1; }
 .empty { padding: 24px 8px; color: var(--muted); text-align: center; font-family: var(--serif); }
 .stack { display: flex; flex-direction: column; gap: 10px; }
 .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -202,21 +192,23 @@ a.row:hover strong { color: var(--accent); }
 .table th, .table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .table th { color: var(--muted); font-weight: 500; }
 
-/* Overview calendar */
-.calendar { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 4px; }
-.week { display: flex; flex-direction: column; gap: 4px; }
-.day { width: 22px; height: 22px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 1px; padding: 2px; }
-.day.today { border-color: var(--ink); }
-.day.future { opacity: 0.35; }
-.day i, .legend i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
-.legend i { margin-left: 8px; }
-i.w { background: var(--write); }
-i.r { background: var(--read); }
-i.s { background: var(--send); }
+/* Desk: one thing */
+.focus { max-width: 640px; margin: 6vh auto 0; }
+.card.one { padding: 28px 24px; }
+.one .verb { margin: 0 0 6px; font-size: 0.8rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.one h1 { font-size: 2.2rem; margin-bottom: 8px; }
+.one .actions { margin-top: 18px; gap: 14px; }
+.big-button { padding: 11px 18px; font-size: 1.05rem; }
+.quiet { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 4px; }
+.quiet .week { display: flex; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--line); }
+.dot.on { background: var(--accent); border-color: var(--accent); }
+.dot.today { outline: 1px solid var(--muted); outline-offset: 2px; }
+.dot.future { opacity: 0.4; }
 
 @media (max-width: 760px) {
   h1 { font-size: 1.6rem; }
-  .cards3, .grid2, .grid3, .houses, .capture, .editor-layout { grid-template-columns: minmax(0, 1fr); }
+  .grid2, .grid3, .houses, .capture, .editor-layout { grid-template-columns: minmax(0, 1fr); }
   .side { position: static; max-height: none; }
   .table { font-size: 0.85rem; }
   .table th:nth-child(5), .table td:nth-child(5) { display: none; }

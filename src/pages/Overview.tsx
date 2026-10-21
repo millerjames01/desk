@@ -1,108 +1,127 @@
-import { activity, calendar, localDate, streak, type Kind } from '../activity';
+import { useState } from 'react';
+import { activity, calendar, localDate, streak } from '../activity';
+import { now, put } from '../db';
 import { daysOut, overdue, totals } from '../publish/publish';
 import { SAMPLE_ISSUE } from '../read/sample';
-import { countWords } from '../read/text';
 import { fmtDay, plural, type Data } from '../lib';
 import type { Article } from '../types';
 
-const KIND_LABEL: Record<Kind, string> = { write: 'wrote', read: 'read', send: 'sent' };
+interface Thing {
+  key: string;
+  verb: string;
+  title: string;
+  why: string;
+  href: string;
+  action: string;
+  /** Done in place, without leaving the page. */
+  done?: { label: string; run: () => Promise<void> };
+}
+
+/**
+ * Everything worth doing, best first. The page shows only the first one not
+ * skipped today. Writing comes first: it is the practice; the rest serves it.
+ */
+function candidates(data: Data, today: string, wroteToday: boolean): Thing[] {
+  const out: Thing[] = [];
+  const drafting = data.pieces.filter((p) => p.status === 'drafting').sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const issue = [...data.issues].filter((i) => i.id !== SAMPLE_ISSUE).sort((a, b) => b.id.localeCompare(a.id))[0];
+  const arts = issue ? (issue.order.map((id) => data.articles.find((a) => a.id === id)).filter(Boolean) as Article[]) : [];
+  const unread = arts.filter((a) => !a.excluded && !a.readAt);
+  const tot = totals(data.submissions, data.pieces, today);
+  const journals = new Map(data.journals.map((j) => [j.id, j]));
+
+  if (!wroteToday) {
+    const p = drafting[0];
+    out.push(
+      p
+        ? { key: `write-${p.id}`, verb: 'Write', title: p.title, why: 'Pick it up where you left it. Save a version when you stop.', href: `#/drafts/${p.id}`, action: 'Open the draft' }
+        : { key: 'write-new', verb: 'Write', title: 'Something new, by hand', why: 'A page is enough. Photograph it when you’re done.', href: '#/drafts/capture', action: 'Add the pages' },
+    );
+  }
+  if (issue?.printedAt && unread[0]) {
+    const a = unread[0];
+    out.push({
+      key: `read-${a.id}`, verb: 'Read', title: a.title, why: `${a.publication || a.domain}, ${a.read_minutes} minutes, in your printed ${issue.id}.`, href: `#/read/${issue.id}`, action: 'Open the issue',
+      done: { label: 'I’ve read it', run: () => put('articles', { ...a, readAt: now(), updatedAt: now() }) },
+    });
+  }
+  if (issue && !issue.printedAt && arts.some((a) => !a.excluded)) {
+    out.push({ key: `print-${issue.id}`, verb: 'Print', title: `Issue ${issue.id}`, why: `${plural(arts.filter((a) => !a.excluded).length, 'article')} ready. Typeset, check, print, staple.`, href: `#/read/${issue.id}`, action: 'Open the issue' });
+  }
+  for (const p of tot.idle) out.push({ key: `send-${p.id}`, verb: 'Send', title: p.title, why: 'It’s ready and out nowhere.', href: `#/publish/new?piece=${p.id}`, action: 'Choose a journal' });
+  for (const s of data.submissions.filter((s) => overdue(s, journals.get(s.journalId), today))) {
+    const j = journals.get(s.journalId);
+    out.push({ key: `query-${s.id}`, verb: 'Query', title: j?.name ?? 'a journal', why: `“${data.pieces.find((p) => p.id === s.pieceId)?.title}” has been there ${daysOut(s, today)} days, past their usual ${j?.responseDays}.`, href: '#/publish', action: 'See what’s out' });
+  }
+  if (!issue) out.push({ key: 'issue-new', verb: 'Gather', title: 'This month’s reading', why: 'Start an issue and add a few things worth reading.', href: '#/read', action: 'Start an issue' });
+  if (wroteToday && drafting[0]) out.push({ key: `write-more-${drafting[0].id}`, verb: 'Write', title: drafting[0].title, why: 'You’ve written today. More is never wrong.', href: `#/drafts/${drafting[0].id}`, action: 'Open the draft' });
+  return out;
+}
+
+const SKIP_KEY = 'desk:skipped';
+
+function loadSkipped(today: string): string[] {
+  try {
+    const s = JSON.parse(localStorage.getItem(SKIP_KEY) ?? '{}');
+    return s.date === today ? s.keys : [];
+  } catch {
+    return [];
+  }
+}
 
 export default function Overview({ data }: { data: Data }) {
   const t = localDate(new Date().toISOString());
   const days = activity(data);
-  const weeks = calendar(days, t, 16);
-  const writeStreak = streak(days, 'write', t);
-  const readStreak = streak(days, 'read', t);
-  const wroteToday = days.get(t)?.has('write');
+  const wroteToday = !!days.get(t)?.has('write');
+  const [skipped, setSkipped] = useState(() => loadSkipped(t));
+  const all = candidates(data, t, wroteToday);
+  const open = all.filter((c) => !skipped.includes(c.key));
+  // Skipped everything that's left? Then the skipped come back.
+  const thing = open[0] ?? all[0];
 
-  const issue = [...data.issues].filter((i) => i.id !== SAMPLE_ISSUE).sort((a, b) => b.id.localeCompare(a.id))[0];
-  const arts = issue ? (issue.order.map((id) => data.articles.find((a) => a.id === id)).filter(Boolean) as Article[]) : [];
-  const unread = arts.filter((a) => !a.excluded && !a.readAt);
-  const held = arts.filter((a) => a.excluded);
+  const skip = () => {
+    // Skips last for today only; tomorrow everything is back.
+    const keys = open.length > 1 ? [...skipped, thing.key] : [];
+    // (With one left, skipping starts the round again.)
+    setSkipped(keys);
+    try {
+      localStorage.setItem(SKIP_KEY, JSON.stringify({ date: t, keys }));
+    } catch {
+      // Private mode: skips just won't survive a reload.
+    }
+  };
 
-  const active = data.pieces.filter((p) => p.status === 'drafting').sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  const weekAgo = Date.now() - 7 * 86400000;
-  const versionsThisWeek = data.versions.filter((v) => Date.parse(v.createdAt) > weekAgo).length;
-  const tot = totals(data.submissions, data.pieces, t);
-  const journals = new Map(data.journals.map((j) => [j.id, j]));
-  const late = data.submissions.filter((s) => overdue(s, journals.get(s.journalId), t));
-
-  const next: { text: string; href: string }[] = [];
-  if (!wroteToday) next.push({ text: active[0] ? `Write: pick up “${active[0].title}”` : 'Write: start something, by hand', href: active[0] ? `#/drafts/${active[0].id}` : '#/drafts/capture' });
-  if (issue && held.length) next.push({ text: `Fix ${plural(held.length, 'held-out article')} in ${issue.id}`, href: `#/read/${issue.id}` });
-  if (issue && !issue.printedAt && arts.length) next.push({ text: `Typeset and print ${issue.id}`, href: `#/read/${issue.id}` });
-  if (unread.length && issue?.printedAt) next.push({ text: `Read: ${unread[0].title}`, href: `#/read/${issue.id}` });
-  if (!issue) next.push({ text: 'Start this month’s reading issue', href: '#/read' });
-  for (const p of tot.idle.slice(0, 2)) next.push({ text: `Send out “${p.title}”: it’s ready and nowhere`, href: `#/publish/new?piece=${p.id}` });
-  for (const s of late.slice(0, 2)) next.push({ text: `Query ${journals.get(s.journalId)?.name}: ${daysOut(s, t)} days on “${data.pieces.find((p) => p.id === s.pieceId)?.title}”`, href: '#/publish' });
+  const written = streak(days, 'write', t);
+  const week = calendar(days, t, 1)[0];
 
   return (
-    <>
-      <div className="head">
-        <p className="crumb">{fmtDay(t)}</p>
-        <h1>The desk</h1>
-        <p className="lede">
-          {writeStreak ? `Writing ${plural(writeStreak, 'day')} running` : 'No writing streak yet'}
-          {readStreak ? ` · reading ${plural(readStreak, 'day')}` : ''}
-          {wroteToday ? ' · written today' : ''}
-        </p>
-      </div>
-
-      {next.length > 0 && (
-        <div className="card">
-          <h3>Next</h3>
-          <ul className="next">
-            {next.map((n, i) => <li key={i}><a href={n.href}>{n.text}</a></li>)}
-          </ul>
+    <div className="focus">
+      <p className="crumb">{fmtDay(t)}</p>
+      {thing ? (
+        <div className="card one">
+          <p className="verb">{thing.verb}</p>
+          <h1>{thing.title}</h1>
+          <p className="muted">{thing.why}</p>
+          <div className="actions">
+            <a className="button primary big-button" href={thing.href}>{thing.action}</a>
+            {thing.done && <button onClick={thing.done.run}>{thing.done.label}</button>}
+            {all.length > 1 && <button className="link" onClick={skip}>Something else</button>}
+          </div>
+        </div>
+      ) : (
+        <div className="card one">
+          <p className="verb">Nothing pressing</p>
+          <h1>Read something, or write a line.</h1>
         </div>
       )}
-
-      <div className="cards3">
-        <a className="card tile" href={issue ? `#/read/${issue.id}` : '#/read'}>
-          <h3>Read</h3>
-          {issue ? (
-            <>
-              <p className="big">{arts.length - held.length}</p>
-              <p className="muted">articles in {issue.id} · {unread.length} unread{issue.printedAt ? ' · printed' : ''}</p>
-            </>
-          ) : <p className="muted">No issue yet.</p>}
-        </a>
-        <a className="card tile" href="#/drafts">
-          <h3>Drafts</h3>
-          <p className="big">{active.length}</p>
-          <p className="muted">
-            in progress · {plural(versionsThisWeek, 'version')} this week · {data.pieces.reduce((n, p) => n + countWords(p.working), 0).toLocaleString()} words on the desk
-          </p>
-        </a>
-        <a className="card tile" href="#/publish">
-          <h3>Publish</h3>
-          <p className="big">{tot.out}</p>
-          <p className="muted">out now · {plural(tot.accepted, 'acceptance')} · {late.length ? `${late.length} overdue` : 'none overdue'}</p>
-        </a>
-      </div>
-
-      <div className="card">
-        <h3>Sixteen weeks</h3>
-        <div className="calendar" role="img" aria-label="Days with reading, writing or sending">
-          {weeks.map((w, i) => (
-            <div key={i} className="week">
-              {w.map((d) => (
-                <span
-                  key={d.date}
-                  className={`day${d.date > t ? ' future' : ''}${d.date === t ? ' today' : ''}`}
-                  title={`${fmtDay(d.date)}${d.kinds.size ? ': ' + [...d.kinds].map((k) => KIND_LABEL[k]).join(', ') : ''}`}
-                >
-                  {d.kinds.has('write') && <i className="w" />}
-                  {d.kinds.has('read') && <i className="r" />}
-                  {d.kinds.has('send') && <i className="s" />}
-                </span>
-              ))}
-            </div>
+      <div className="quiet">
+        <span className="week" aria-label="This week">
+          {week.map((d) => (
+            <span key={d.date} className={`dot${d.kinds.size ? ' on' : ''}${d.date === t ? ' today' : ''}${d.date > t ? ' future' : ''}`} title={fmtDay(d.date)} />
           ))}
-        </div>
-        <p className="legend muted small"><i className="w" /> wrote (a version saved or a page captured) <i className="r" /> read (an article ticked) <i className="s" /> sent</p>
-        <p className="muted small">Counted from the record itself, never stored, so it can’t drift and can’t be padded.</p>
+        </span>
+        <span className="muted small">{written > 1 ? `Wrote ${written} days running` : wroteToday ? 'Wrote today' : ' '}</span>
       </div>
-    </>
+    </div>
   );
 }

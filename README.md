@@ -8,7 +8,7 @@ A one-person desk for a reading and writing practice. Three rooms:
 | **Drafts** | Photograph handwritten pages, read them with OCR, then work the text in an editor that keeps every version you save, with word-level diffs. |
 | **Publish** | Journals, submissions and answers: what's out, for how long, who takes simultaneous submissions, what to withdraw when something is accepted. |
 
-The **Desk** page ties them together: what to do next, and sixteen weeks of reading, writing and sending days. Those days are derived from the record every time: a version saved, a page captured, an article ticked as read, a submission sent. Nothing is stored that could drift or be padded.
+The **Desk** page shows one thing to do, not a list: write (always first, until you have today), read the next article in a printed issue, print the issue, send a ready piece, or query a journal that's overdue. *Something else* swaps it for the next one, for today only. Underneath, one quiet line: this week's days and how many in a row you've written. Those days come from the record (a version saved, pages captured, an article read, a submission sent); nothing is stored, so there's nothing to pad.
 
 Everything runs in the browser and lives in IndexedDB on the device. There is no backend and no account. It is hosted on GitHub Pages and installs to a phone's home screen.
 
