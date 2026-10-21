@@ -41,19 +41,19 @@ function candidates(data: Data, today: string, wroteToday: boolean): Thing[] {
   if (issue?.printedAt && unread[0]) {
     const a = unread[0];
     out.push({
-      key: `read-${a.id}`, verb: 'Read', title: a.title, why: `${a.publication || a.domain}, ${a.read_minutes} minutes, in your printed ${issue.id}.`, href: `#/read/${issue.id}`, action: 'Open the issue',
+      key: `read-${a.id}`, verb: 'Read', title: a.title, why: `${a.publication || a.domain}, ${a.read_minutes} minutes, in your printed ${issue.source ? issue.source.edition : issue.id}.`, href: `#/read/${issue.id}`, action: 'Open the issue',
       done: { label: 'I’ve read it', run: () => put('articles', { ...a, readAt: now(), updatedAt: now() }) },
     });
   }
   if (issue && !issue.printedAt && arts.some((a) => !a.excluded)) {
-    out.push({ key: `print-${issue.id}`, verb: 'Print', title: `Issue ${issue.id}`, why: `${plural(arts.filter((a) => !a.excluded).length, 'article')} ready. Typeset, check, print, staple.`, href: `#/read/${issue.id}`, action: 'Open the issue' });
+    out.push({ key: `print-${issue.id}`, verb: 'Print', title: issue.source ? `${issue.source.publication} · ${issue.source.edition}` : `Issue ${issue.id}`, why: `${plural(arts.filter((a) => !a.excluded).length, 'article')} ready. Typeset, check, print, staple.`, href: `#/read/${issue.id}`, action: 'Open the issue' });
   }
   for (const p of tot.idle) out.push({ key: `send-${p.id}`, verb: 'Send', title: p.title, why: 'It’s ready and out nowhere.', href: `#/publish/new?piece=${p.id}`, action: 'Choose a journal' });
   for (const s of data.submissions.filter((s) => overdue(s, journals.get(s.journalId), today))) {
     const j = journals.get(s.journalId);
     out.push({ key: `query-${s.id}`, verb: 'Query', title: j?.name ?? 'a journal', why: `“${data.pieces.find((p) => p.id === s.pieceId)?.title}” has been there ${daysOut(s, today)} days, past their usual ${j?.responseDays}.`, href: '#/publish', action: 'See what’s out' });
   }
-  if (!issue) out.push({ key: 'issue-new', verb: 'Gather', title: 'This month’s reading', why: 'Start an issue and add a few things worth reading.', href: '#/read', action: 'Start an issue' });
+  if (!issue || issue.printedAt && !unread.length) out.push({ key: 'issue-new', verb: 'Gather', title: 'The next booklet', why: 'Pick a journal and one of its editions; Desk fetches the stories.', href: '#/read', action: 'Choose an edition' });
   if (wroteToday && drafting[0]) out.push({ key: `write-more-${drafting[0].id}`, verb: 'Write', title: drafting[0].title, why: 'You’ve written today. More is never wrong.', href: `#/drafts/${drafting[0].id}`, action: 'Open the draft' });
   return out;
 }

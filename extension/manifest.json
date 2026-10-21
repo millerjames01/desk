@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Desk Reader",
+  "version": "0.1.0",
+  "description": "Fetches the stories in a journal's edition for Desk, slowly and within robots.txt, and captures the page you're reading.",
+  "background": { "service_worker": "background.js", "type": "module" },
+  "permissions": ["activeTab", "scripting", "storage", "tabs", "declarativeNetRequest"],
+  "host_permissions": ["<all_urls>"],
+  "action": { "default_title": "Send this page to Desk", "default_icon": { "128": "icon-128.png" } },
+  "icons": { "128": "icon-128.png" },
+  "content_scripts": [
+    {
+      "matches": ["https://millerjames01.github.io/desk/*", "http://localhost/*", "http://127.0.0.1/*"],
+      "js": ["bridge.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

@@ -57,11 +57,13 @@ export interface Issue {
   /** Cover subtitle override (house C uses it). */
   subtitle: string;
   printedAt?: string;
+  /** The edition this issue reproduces, when it was built from one. */
+  source?: { domain: string; publication: string; edition: string; url: string };
   createdAt: string;
   updatedAt: string;
 }
 
-export type FlagCode = 'thin' | 'low-ratio' | 'paywall' | 'mid-sentence' | 'link-heavy' | 'duplicates' | 'no-body';
+export type FlagCode = 'thin' | 'low-ratio' | 'paywall' | 'mid-sentence' | 'link-heavy' | 'duplicates' | 'no-body' | 'trimmed' | 'profile-miss';
 
 export interface Flag {
   code: FlagCode;
@@ -87,7 +89,10 @@ export interface Article {
   images: string[];
   flags: Flag[];
   /** How the body was obtained. */
-  via: 'proxy' | 'bookmarklet' | 'paste' | 'claude';
+  via: 'proxy' | 'bookmarklet' | 'paste' | 'claude' | 'extension';
+  /** Under 1,000 words, or marked so: set together in the Short Takes section. */
+  shortTake?: boolean;
+  category?: string;
   /** Held back from the booklet until fixed. Flagged articles start excluded. */
   excluded: boolean;
   readAt?: string;

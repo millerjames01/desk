@@ -29,6 +29,8 @@ jobs:
       - run: npm run build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
+      # The Desk Reader extension, served beside the app for "Load unpacked".
+      - run: cd extension && zip -r ../dist/desk-reader.zip . -x '*.DS_Store'
       - uses: actions/configure-pages@v5
         with:
           # Turns Pages on (source: GitHub Actions) if it isn't already.

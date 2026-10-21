@@ -74,6 +74,21 @@
 .article { break-before: page; }
 .recto-starts .article { break-before: right; }
 
+/* Short Takes: one after another, a new page only when too little is left. */
+.short-takes-opener { break-before: page; padding-top: 50mm; text-align: center; }
+.short-takes-opener h2 { font-size: calc(var(--title-size) * 0.85); font-weight: var(--title-weight, 400); margin: 0 0 4mm; }
+.short-takes-opener p { color: var(--muted); margin: 0; }
+.article.short { break-before: auto; margin-top: 11mm; }
+.article.short.first-short, .article.short.new-page, .recto-starts .article.short.first-short { break-before: page; margin-top: 0; }
+.article.short.keep { break-inside: avoid; }
+.book .article .short-head { margin-bottom: 5mm; padding-top: 0; border: 0; }
+.short-head .kicker { font-size: 8pt; letter-spacing: 0.12em; text-transform: uppercase; }
+.short-head .kicker { margin-bottom: 1.5mm; }
+.short-head .article-title { font-size: calc(var(--title-size) * 0.68); }
+.short-head .byline { margin-top: 2mm; }
+.toc-group-title { display: block; margin: 2mm 0 3mm; font-size: 9pt; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.toc-short { padding-left: 1.6em; }
+
 .article-head { margin: 0 0 7mm; }
 .article-title {
   font-weight: var(--title-weight, 400);
@@ -116,6 +131,8 @@
 .article-body sup, .article-body sub { line-height: 0; font-size: 0.7em; }
 .article-body code { font-size: 0.9em; }
 .article-body pre { white-space: pre-wrap; font-size: 8.5pt; }
+/* Pieces whose spacing is part of the work keep it, in the body face. */
+.article-body pre.verse { font: inherit; text-align: left; hyphens: manual; margin: 0.6em 0; }
 
 /* Figures: full width, between paragraphs, never floated. */
 .article-body figure { margin: 5mm 0; break-inside: avoid; }

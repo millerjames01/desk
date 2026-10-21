@@ -20,7 +20,17 @@ export interface RenderInput {
   imageUrl: (id: string) => string | undefined;
   /** Extra blank or notes pages before the colophon, to reach a multiple of 4. */
   pad: number;
+  /** Short Takes that start a page because too little was left on the last one. */
+  breakBefore?: Set<string>;
 }
+
+/** Long reads first, then Short Takes, each group in issue order. */
+export function readingOrder(articles: Article[]): Article[] {
+  return [...articles.filter((a) => !a.shortTake), ...articles.filter((a) => a.shortTake)];
+}
+
+/** Under this, a Short Take is never split across pages. */
+export const KEEP_WHOLE_WORDS = 250;
 
 const md = new MarkdownIt({ html: true, typographer: true, linkify: false }).use(footnote);
 // Smart quotes only. The other replacements ((c) → ©, -- → –) would change
@@ -56,7 +66,8 @@ export function bodyHtml(a: Article, imageUrl: RenderInput['imageUrl'], opener: 
 
   box.querySelectorAll('script,style,iframe,object,embed,form,link,meta').forEach((el) => el.remove());
   box.querySelectorAll('*').forEach((el) => {
-    for (const attr of [...el.attributes]) if (/^on/i.test(attr.name) || /^\s*javascript:/i.test(attr.value)) el.removeAttribute(attr.name);
+    // No style attributes either: Paged.js treats any element carrying one as hidden.
+    for (const attr of [...el.attributes]) if (attr.name === 'style' || /^on/i.test(attr.name) || /^\s*javascript:/i.test(attr.value)) el.removeAttribute(attr.name);
   });
   box.querySelectorAll('h1').forEach((h) => {
     const h2 = document.createElement('h2');
@@ -174,17 +185,22 @@ function cover(i: RenderInput, issueLabel: ReturnType<typeof labels>): string {
 }
 
 function contents(i: RenderInput): string {
-  const rows = i.articles
-    .map((a, n) => {
-      const skin = resolveSkin(a.domain, i.pubs, a.publication);
-      const who = [a.author, skin.name].filter(Boolean).map(esc).join(' · ');
-      return `<li><a class="toc-link" href="#${a.id}"><span class="toc-n">${n + 1}</span><span class="toc-title">${esc(a.title)}</span><span class="toc-who">${who}</span></a></li>`;
-    })
-    .join('');
-  return `<section class="contents"><h2 class="contents-title">Contents</h2><ol class="toc">${rows}</ol></section>`;
+  const row = (a: Article, n: number) => {
+    const skin = resolveSkin(a.domain, i.pubs, a.publication);
+    const who = [a.author, skin.name].filter(Boolean).map(esc).join(' · ');
+    return `<li><a class="toc-link" href="#${a.id}"><span class="toc-n">${n}</span><span class="toc-title">${esc(a.title)}</span><span class="toc-who">${who}</span></a></li>`;
+  };
+  const long = i.articles.filter((a) => !a.shortTake);
+  const short = i.articles.filter((a) => a.shortTake);
+  const rows = long.map((a, n) => row(a, n + 1)).join('');
+  // Short Takes are one entry with their titles underneath (only a group when there are long reads too).
+  const group = short.length && long.length
+    ? `<li class="toc-group"><span class="toc-group-title">Short Takes</span><ol class="toc toc-short">${short.map((a, n) => row(a, long.length + n + 1)).join('')}</ol></li>`
+    : short.map((a, n) => row(a, n + 1)).join('');
+  return `<section class="contents"><h2 class="contents-title">Contents</h2><ol class="toc">${rows}${group}</ol></section>`;
 }
 
-function article(a: Article, n: number, i: RenderInput, vars: string[]): string {
+function article(a: Article, n: number, i: RenderInput, vars: string[], firstShort = false): string {
   const house = i.config.house_style;
   const skin = resolveSkin(a.domain, i.pubs, a.publication, HOUSE_ORNAMENT[house]);
   const kicker = kickerText(skin.kicker, { section: a.section, read_minutes: a.read_minutes, publication: skin.name });
@@ -194,7 +210,7 @@ function article(a: Article, n: number, i: RenderInput, vars: string[]): string 
   const opener = skin.opener_variant || '';
   const attrs = [
     `id="${a.id}"`,
-    `class="article art-${n + 1}"`,
+    `class="article art-${n + 1}${a.shortTake ? ` short${a.words < KEEP_WHOLE_WORDS ? ' keep' : ''}${firstShort ? ' first-short' : ''}${i.breakBefore?.has(a.id) ? ' new-page' : ''}` : ''}"`,
     `data-pub="${esc(skin.key)}"`,
     opener ? `data-opener="${opener}"` : '',
     skin.rule ? `data-rule="${skin.rule}"` : '',
@@ -215,6 +231,22 @@ function article(a: Article, n: number, i: RenderInput, vars: string[]): string 
   const byline = house === 'b-grid'
     ? `<div class="dek-row"><p class="dek">${esc(a.dek)}</p><div class="byline">${esc(a.author)}${a.author ? '<br>' : ''}${a.read_minutes} min read</div></div>`
     : `${a.dek ? `<p class="dek">${esc(a.dek)}</p>` : ''}${a.author ? `<div class="byline">${esc(a.author)}</div>` : ''}`;
+  // A Short Take opens compactly: journal, title, author, and the text follows on the same page.
+  const head = a.shortTake
+    ? `<header class="article-head short-head">
+  <div class="kicker">${esc(skin.name)}</div>
+  <h1 class="article-title">${esc(a.title)}</h1>
+  ${a.author ? `<div class="byline">${esc(a.author)}</div>` : ''}
+</header>`
+    : '';
+  if (head) {
+    return `<article ${attrs}>
+<span class="rh-title">${esc(a.title)}</span><span class="rh-section">Short Takes</span>
+${head}
+<div class="article-body" data-article="${a.id}">${bodyHtml(a, i.imageUrl, opener || defaultOpener(house), skin.ornament)}</div>
+<p class="source-note">${source}</p>
+</article>`;
+  }
   return `<article ${attrs}>
 <span class="rh-title">${esc(a.title)}</span><span class="rh-section">${esc(a.section || skin.name)}</span>
 <header class="article-head">
@@ -270,13 +302,19 @@ export function renderIssue(i: RenderInput): Rendered {
   const pads = Array.from({ length: i.pad }, () =>
     i.config.pad_with === 'notes' ? '<section class="pad pad-notes"><h2>Notes</h2><div class="ruled"></div></section>' : '<section class="pad pad-blank"><p class="pad-fill">&nbsp;</p></section>',
   ).join('');
-  const articles = i.articles.map((a, n) => article(a, n, i, vars)).join('\n');
+  const ordered = readingOrder(i.articles);
+  const firstShort = ordered.findIndex((a) => a.shortTake);
+  const hasLong = ordered.some((a) => !a.shortTake);
+  const shortCount = ordered.length - (firstShort < 0 ? ordered.length : firstShort);
+  const articles = ordered
+    .map((a, n) => (n === firstShort && hasLong ? `<section class="short-takes-opener"><h2>Short Takes</h2><p>${shortCount} short piece${shortCount === 1 ? '' : 's'}</p></section>\n` : '') + article(a, n, i, vars, n === firstShort))
+    .join('\n');
   const html = `<div class="book house-${house}${i.config.recto_starts ? ' recto-starts' : ''}">
 ${cover(i, issueLabel).replace('<div class="cover-top">', `<div class="cover-top"><span class="rh-issue">${esc(issueLabel.mark)}</span>`)}
-${contents(i)}
+${contents({ ...i, articles: ordered })}
 ${articles}
 ${pads}
-${colophon(i, issueLabel)}
+${colophon({ ...i, articles: ordered }, issueLabel)}
 <section class="back-cover"><div class="back-mark">${esc(issueLabel.mark)}</div></section>
 </div>`;
   return { html, css: vars.join('\n') };

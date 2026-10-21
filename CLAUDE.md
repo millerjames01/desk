@@ -4,7 +4,13 @@ Read `README.md` for the whole picture. These are the rules that keep it honest.
 
 ## Browser only
 
-No backend, no server, no build pipeline beyond Vite. Data lives in IndexedDB on the device (`src/db.ts`). Anything that needs another site goes through the CORS proxies in Settings or the bookmarklet. Don't add a service that has to run somewhere.
+No backend, no server, no build pipeline beyond Vite. Data lives in IndexedDB on the device (`src/db.ts`). Anything that needs another site goes through the Desk Reader extension, the CORS proxies in Settings, or the bookmarklet. Don’t add a service that has to run somewhere.
+
+## Fetching other sites
+
+- Only through the transport (`src/read/transport.ts`): the extension or the proxies. Both obey robots.txt for `DeskReader`/`*`, wait at least 3 s between requests to a host, identify honestly and cache. Don't add a path around them, and don't lower the gap.
+- Walk only the edition the reader chose: its list pages and its stories. No site-wide crawling, no following links beyond the profile's rules.
+- Site specifics live in profiles (`src/read/sites.ts`, editable at Read → Sites), not in code paths.
 
 ## The text is the text
 

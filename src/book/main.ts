@@ -113,12 +113,28 @@ async function typeset(html: string, css: string): Promise<HTMLElement[]> {
   return [...pagesEl.querySelectorAll<HTMLElement>('.pagedjs_page')];
 }
 
+/** Short Takes whose heading lands with less than 40% of the page left below it. */
+function lateShortTakes(pages: HTMLElement[]): Set<string> {
+  const late = new Set<string>();
+  for (const p of pages) {
+    const area = p.querySelector('.pagedjs_page_content')?.getBoundingClientRect();
+    if (!area) continue;
+    p.querySelectorAll<HTMLElement>('.article.short:not(.first-short)').forEach((a) => {
+      const head = a.querySelector('.short-head');
+      if (!head) return;
+      const top = head.getBoundingClientRect().top - area.top;
+      if (top / area.height > 0.6) late.add(a.dataset.id ?? a.id);
+    });
+  }
+  return late;
+}
+
 function markPages(pages: HTMLElement[], house: HouseStyle, coverColour: string): void {
   for (const p of pages) {
     p.classList.add(HOUSE_SHORT[house]);
     // On screen the cover page shows the card's colour edge to edge.
     if (p.querySelector('.cover')) p.style.setProperty('--card', coverColour);
-    if (p.querySelector('.article-head')) p.classList.add('opener');
+    if (p.querySelector('.article:not(.short) .article-head, .short-takes-opener')) p.classList.add('opener');
     if (p.querySelector('.pad')) p.classList.add('pad-page');
   }
 }
@@ -240,11 +256,19 @@ async function main(): Promise<void> {
   say('Typesetting…');
   let out = renderIssue(input);
   let pages = await typeset(out.html, css + '\n' + out.css);
+  // A Short Take that would start in the bottom 40% of a page starts the next one instead.
+  const late = lateShortTakes(pages);
+  if (late.size) {
+    say('Typesetting again to move short pieces that start low on a page…');
+    clearPaged();
+    out = renderIssue({ ...input, breakBefore: late });
+    pages = await typeset(out.html, css + '\n' + out.css);
+  }
   const pad = padCount(pages.length);
   if (pad) {
     say(`Typesetting again with ${pad} padding page${pad > 1 ? 's' : ''}…`);
     clearPaged();
-    out = renderIssue({ ...input, pad });
+    out = renderIssue({ ...input, breakBefore: late, pad });
     pages = await typeset(out.html, css + '\n' + out.css);
   }
   const html = out.html;

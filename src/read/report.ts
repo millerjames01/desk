@@ -11,6 +11,8 @@ const FLAG_LABEL: Record<string, string> = {
   'link-heavy': 'Mostly links',
   duplicates: 'Repeated paragraphs',
   'no-body': 'No body',
+  trimmed: 'Bio trimmed',
+  'profile-miss': 'Site profile missed',
 };
 
 export function flagLabel(code: string): string {

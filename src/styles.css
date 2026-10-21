@@ -162,6 +162,16 @@ a.row:hover strong { color: var(--accent); }
 .house.on { border-color: var(--accent); }
 .house p { margin: 6px 0; }
 
+/* Editions */
+.editions { display: flex; flex-wrap: wrap; gap: 6px; }
+.editions .on { border-color: var(--accent); }
+.checklist { list-style: none; padding: 0; margin: 0; columns: 2 260px; }
+.checklist li { break-inside: avoid; padding: 3px 0; }
+.walk progress { width: 100%; accent-color: var(--accent); }
+.global-toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 20; max-width: min(560px, calc(100vw - 32px)); box-shadow: 0 2px 12px rgba(0,0,0,.15); }
+.global-toast .notice { margin: 0; }
+.test-result { white-space: pre-wrap; font-size: 0.85rem; background: var(--paper); padding: 10px; border-radius: 8px; border: 1px solid var(--line); }
+
 /* Drafts */
 .capture { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 16px; }
 .capture-photo img { width: 100%; border-radius: 6px; border: 1px solid var(--line); }

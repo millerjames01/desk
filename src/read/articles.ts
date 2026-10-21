@@ -6,13 +6,39 @@
 
 import { all, get, now, put, putMany, today, uid } from '../db';
 import type { Article, Issue, Publication, Settings } from '../types';
-import { domainOf, extract, fromPlainText, parseHtml } from './extract';
+import { domainOf, extract, fromPlainText, parseHtml, type Extracted } from './extract';
 import { dataUrlToBlob, fetchImage, fetchPage } from './fetch';
 import { prepareImage } from './images';
-import { checkArticle, visibleWords } from './quality';
+import { checkArticle, holds, visibleWords } from './quality';
+import { extractWithProfile, profileFor, profileReport } from './sites';
+import { loadProfiles } from './profiles';
+import type { Transport } from './transport';
 import { newSkins } from './skins';
 import { countWords, markdownBlocks, readMinutes, slugify } from './text';
 import { sourceText, verifyAgainstSource } from './verify';
+
+export class DuplicateError extends Error {
+  constructor(message: string, readonly article: Article) {
+    super(message);
+  }
+}
+
+/** Same page, ignoring the scheme, www., a trailing slash, the fragment and tracking parameters. */
+export function sameUrl(a: string, b: string): boolean {
+  const key = (u: string) => {
+    try {
+      const x = new URL(u);
+      for (const p of [...x.searchParams.keys()]) if (/^(utm_|fbclid|gclid|ref$)/.test(p)) x.searchParams.delete(p);
+      return `${x.hostname.replace(/^www\./, '')}${x.pathname.replace(/\/$/, '')}${x.search}`;
+    } catch {
+      return u;
+    }
+  };
+  return key(a) === key(b);
+}
+
+/** Pieces under this many words are set together as Short Takes. */
+export const SHORT_TAKE_WORDS = 1000;
 
 export interface AddResult {
   article: Article;
@@ -29,11 +55,11 @@ async function ensureSkin(domain: string, name: string, notes: string[]): Promis
   }
 }
 
-async function storeImages(markdown: string, images: { src: string }[], settings: Settings, posted: Record<string, string>, notes: string[]): Promise<{ markdown: string; ids: string[] }> {
+async function storeImages(markdown: string, images: { src: string }[], settings: Settings, posted: Record<string, string>, notes: string[], transport?: Transport): Promise<{ markdown: string; ids: string[] }> {
   const ids: string[] = [];
   let md = markdown;
   for (const { src } of images) {
-    const raw = posted[src] ? await dataUrlToBlob(posted[src]) : await fetchImage(src, settings.proxies);
+    const raw = posted[src] ? await dataUrlToBlob(posted[src]) : transport ? await transport.fetchImage(src) : await fetchImage(src, settings.proxies);
     const prepared = raw ? await prepareImage(raw) : null;
     const escaped = src.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     if (!prepared) {
@@ -99,12 +125,24 @@ export async function addFromHtml(opts: {
   via: Article['via'];
   settings: Settings;
   postedImages?: Record<string, string>;
+  transport?: Transport;
+  /** Filled in when the article came from walking an edition. */
+  section?: string;
 }): Promise<AddResult> {
   const { issueId, url, html, via, settings } = opts;
   const notes: string[] = [];
-  const ex = extract(html, url, { maxImages: settings.book.max_images_per_article });
+  const issue = await get('issues', issueId);
+  const same = (await all('articles')).find((a) => a.issueId === issueId && issue?.order.includes(a.id) && sameUrl(a.url, url));
+  if (same) throw new DuplicateError(`“${same.title}” is already in this issue.`, same);
+  const maxImages = settings.book.max_images_per_article;
+  const profile = profileFor(url, await loadProfiles());
+  let ex: Extracted & { category?: string } = (profile && extractWithProfile(html, url, profile, { maxImages })) || extract(html, url, { maxImages });
+  const profiled = !!profile && ex.siteName === profile.name;
+  if (profile && !profiled) {
+    ex = { ...ex, flags: [...ex.flags, { code: 'profile-miss', detail: `The ${profile.name} profile found no story body (${profileReport(html, url, profile).join(', ') || 'body'}); read with the generic extractor instead. The site may have changed.` }] };
+  }
   await ensureSkin(ex.domain, ex.siteName, notes);
-  const { markdown, ids } = await storeImages(ex.markdown, ex.images, settings, opts.postedImages ?? {}, notes);
+  const { markdown, ids } = await storeImages(ex.markdown, ex.images, settings, opts.postedImages ?? {}, notes, opts.transport);
   const id = `${slugify(ex.title)}-${Date.now().toString(36)}`;
   await put('blobs', { id: `raw-${id}`, kind: 'raw-html', text: html, createdAt: now() });
   let article: Article = {
@@ -120,18 +158,20 @@ export async function addFromHtml(opts: {
     fetched: today(),
     words: ex.words,
     read_minutes: ex.read_minutes,
-    section: ex.section,
+    section: opts.section || ex.section,
+    category: ex.category,
+    shortTake: ex.words < SHORT_TAKE_WORDS,
     markdown,
     images: ids,
     flags: ex.flags,
     via,
-    excluded: ex.flags.length > 0,
+    excluded: holds(ex.flags, profiled),
     createdAt: now(),
     updatedAt: now(),
   };
   await put('articles', article);
   await addToIssue(issueId, id);
-  if (article.flags.length && settings.anthropicKey && settings.autoClaudeExtract) {
+  if (article.excluded && settings.anthropicKey && settings.autoClaudeExtract) {
     try {
       const r = await claudeFallback(article, settings);
       notes.push(r.message);

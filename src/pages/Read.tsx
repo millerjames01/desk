@@ -12,6 +12,7 @@ import { BUILT_IN, OPENERS, ORNAMENTS, RULES, safeAccent, TITLE_CASES } from '..
 import { countWords, markdownBlocks, readMinutes } from '../read/text';
 import { download } from '../backup';
 import type { Article, Issue, Publication } from '../types';
+import { EditionBuilder, WalkPanel } from './Editions';
 
 const BASE = import.meta.env.BASE_URL;
 const deskUrl = () => new URL(BASE, location.href).href;
@@ -72,12 +73,14 @@ export function ReadIndex({ data }: { data: Data }) {
         <h1>Read</h1>
         <p className="lede">A booklet of things worth reading, printed at home, folded and stapled.</p>
         <div className="actions">
-          <button className="primary" onClick={newIssue}>New issue</button>
+          <button onClick={newIssue}>Empty issue</button>
           <button onClick={sample}>Try the sample issue</button>
+          <a className="button" href="#/read/sites">Sites</a>
           <a className="button" href="#/read/publications">Publications</a>
         </div>
         {notice}
       </div>
+      <EditionBuilder data={data} />
       {issues.length ? (
         <div className="list">
           {issues.map((i) => {
@@ -88,7 +91,7 @@ export function ReadIndex({ data }: { data: Data }) {
               <a key={i.id} className="row" href={`#/read/${i.id}`}>
                 <span className="swatch" style={{ background: i.coverColour || COVER_DEFAULTS[data.settings.book.house_style] }} />
                 <span className="grow">
-                  <strong>{i.id === SAMPLE_ISSUE ? 'Sample issue' : `${labels(data.settings.book.house_style, data.settings.book.title, issueNumber(i.id, data.issues)).numberLabel} · ${issueDate(i.id).month}`}</strong>
+                  <strong>{i.id === SAMPLE_ISSUE ? 'Sample issue' : i.source ? `${i.source.publication} · ${i.source.edition}` : `${labels(data.settings.book.house_style, data.settings.book.title, issueNumber(i.id, data.issues)).numberLabel} · ${issueDate(i.id).month}`}</strong>
                   <span className="muted">
                     {plural(arts.length, 'article')}
                     {held ? ` · ${held} held out` : ''}
@@ -336,13 +339,14 @@ export function IssuePage({ data, issueId }: { data: Data; issueId: string }) {
     <>
       <div className="head">
         <p className="crumb"><a href="#/read">Read</a></p>
-        <h1>{issue.id === SAMPLE_ISSUE ? 'Sample issue' : `${lab.numberLabel} · ${issueDate(issue.id).month}`}</h1>
+        <h1>{issue.id === SAMPLE_ISSUE ? 'Sample issue' : issue.source ? `${issue.source.publication} · ${issue.source.edition}` : `${lab.numberLabel} · ${issueDate(issue.id).month}`}</h1>
         <p className="lede">
           {plural(ready.length, 'article')} for the booklet · {words.toLocaleString()} words · about {Math.round(words / 230)} minutes
           {arts.length > ready.length ? ` · ${arts.length - ready.length} held out` : ''}
         </p>
       </div>
 
+      <WalkPanel issueId={issue.id} data={data} />
       <AddArticle issue={issue} data={data} />
 
       <div className="card">

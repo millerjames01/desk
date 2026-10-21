@@ -1,6 +1,7 @@
-import { useData, useRoute } from './lib';
+import { useData, useNotice, useRoute } from './lib';
 import Overview from './pages/Overview';
 import { IssuePage, Publications, ReadIndex, Receive } from './pages/Read';
+import { CaptureListener, Sites } from './pages/Editions';
 import { Capture, DraftsIndex, PiecePage } from './pages/Drafts';
 import Publish from './pages/Publish';
 import SettingsPage from './pages/Settings';
@@ -17,6 +18,7 @@ export default function App() {
   const route = useRoute();
   const data = useData();
   const [head = '', sub, third] = route;
+  const [notice, show] = useNotice();
 
   if (!data) return <div className="boot">Opening the desk…</div>;
 
@@ -25,6 +27,7 @@ export default function App() {
   else if (head === 'read') {
     if (sub === 'receive') page = <Receive data={data} />;
     else if (sub === 'publications') page = <Publications data={data} />;
+    else if (sub === 'sites') page = <Sites data={data} />;
     else if (sub) page = <IssuePage data={data} issueId={sub} />;
     else page = <ReadIndex data={data} />;
   } else if (head === 'drafts') {
@@ -46,6 +49,8 @@ export default function App() {
           ))}
         </nav>
       </header>
+      <CaptureListener data={data} onNotice={show} />
+      {notice && <div className="global-toast">{notice}</div>}
       <main className="page">{page}</main>
     </div>
   );

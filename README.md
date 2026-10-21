@@ -20,16 +20,63 @@ Everything runs in the browser and lives in IndexedDB on the device. There is no
 - **Keep it.** Settings → *Ask the browser to keep my data*, then *Download a backup* now and then. The data lives only in this browser.
 - **Offline.** After the first visit the app works without a connection. Fetching articles, Claude, and Tesseract's first download need one.
 
-## Read: the booklet
+## Read: booklets of editions
 
-The brief for the booklet is in [`design-reference/MARGINALIA-BRIEF.md`](design-reference/MARGINALIA-BRIEF.md), with the nine mockups beside it. The brief describes a Node pipeline. Desk does the same work in the browser, with no server:
+A booklet is one edition of one journal: SmokeLong's Issue Ninety-Three, HAD's October, Lost Balloon's September. On the Read page, **From an edition**:
+
+1. Choose the journal, then an issue or a month (or paste an edition's address).
+2. Desk lists every story in it, from the issue page or the month's archive, following "older posts" pages as needed. Untick any you don't want.
+3. **Make the booklet.** Desk fetches the stories one at a time, a few seconds apart, into a new issue titled with the journal and edition. You can leave the page; a closed tab resumes with **Carry on**.
+4. Typeset, check, print.
+
+The source survey is in [`design-reference/SOURCES.md`](design-reference/SOURCES.md). The site profiles are in `src/read/sites.ts` and editable at Read → **Sites**, with a tester for any story URL.
+
+| Journal | Edition | Profile |
+|---|---|---|
+| SmokeLong Quarterly | an issue | checked against live pages |
+| Vestal Review | an issue | from the survey; check on first use |
+| Lost Balloon | a month | checked |
+| HAD | a month | checked |
+| X-R-A-Y | a month | story pages checked; the month archive not yet seen |
+| Flash Frog | — | no profile yet; capture pages one at a time |
+
+A profile finds the story, not a guess at it: title, author, date, body, and what to strip (audio players, share bars, bios). When a profile's body selector finds nothing, the page goes through Readability instead and the article is held out with a note that the site may have changed.
+
+### The Desk Reader extension
+
+Browsers can't read other sites' pages, so walking an edition needs help. The **Desk Reader** extension (`extension/`, also served as `desk-reader.zip` beside the app) does the fetching, and nothing else:
+
+- It obeys each site's `robots.txt`, read fresh, for the `DeskReader` agent or `*`. A disallowed page is refused; open it yourself and press the button.
+- One request per site every 3 seconds at least, longer if `Crawl-delay` asks.
+- It says who it is: `Mozilla/5.0 (compatible; DeskReader/0.1; personal reading…)`.
+- Pages are cached for 30 days, so nothing is fetched twice.
+- It fetches only the pages Desk asks for: an edition's list and its stories, plus their images. It never follows links on its own.
+- Its toolbar button sends the page you're reading to Desk, into an unprinted issue of the same journal if there is one. A story already in the issue is skipped.
+
+Install: download `desk-reader.zip` (link on the Read page), unzip, open `chrome://extensions`, turn on **Developer mode**, **Load unpacked**, choose the folder, reload Desk. Without it, Desk falls back to public CORS proxies with the same rules applied in the page, which works when the proxies do.
+
+The survey listed HAD, X-R-A-Y and Flash Frog as disallowed by `robots.txt`. Checked live on 21 October 2026, HAD and X-R-A-Y allow general agents; they block AI crawlers by name, which is likely what the survey saw. Vestal Review blocks `ClaudeBot` and `anthropic-ai` but allows general agents on story pages. Flash Frog didn't answer at the addresses tried. None of this is hard-coded: the extension asks each site every time.
+
+### Short Takes
+
+Pieces under 1,000 words are **Short Takes**. They follow the long reads in their own section (with an opener page when there are long reads too), and run one after another rather than a page each. A piece under 250 words is never split across pages. A piece that would begin in the bottom 40% of a page starts the next one instead; a measuring pass finds those. The contents lists Short Takes as a group.
+
+### Other ways in
+
+- **Add articles** on an issue page: paste URLs, fetched the same way.
+- The **bookmarklet** (Read page): on any article tab, click it to send that page. No extension needed.
+- **Paste** the text, for anything else.
+
+### The booklet
+
+The brief for the booklet is in [`design-reference/MARGINALIA-BRIEF.md`](design-reference/MARGINALIA-BRIEF.md), with the nine mockups beside it. The brief describes a Node pipeline; Desk does the same work in the browser:
 
 | Brief step | In Desk |
 |---|---|
-| Scrape (undici, Playwright) | **Fetch** through public CORS proxies; the **bookmarklet** on the article's own tab (sees what you see, JavaScript and all); or **paste**. |
-| Extract (Readability, Turndown) | The same libraries, in the browser (`src/read/extract.ts`). |
+| Scrape (undici, Playwright) | The extension, or proxies, or the bookmarklet, or paste. |
+| Extract (Readability, Turndown) | Site profiles first, Readability as the fallback, the same Turndown rules for both (`src/read/extract.ts`, `src/read/sites.ts`). |
 | Images (sharp) | Canvas: greyscale, ≤ 1400 px on the long edge, nothing under 300 px wide, at most 3 per article, lead and captioned images first. |
-| Sanity checks + Claude fallback | `src/read/quality.ts`. Flagged articles are **held out** of the booklet. With an API key, Claude extracts the body, and the result is kept only if every paragraph is found word for word in the page (`src/read/verify.ts`). Otherwise the article is listed as needing a manual paste. |
+| Sanity checks + Claude fallback | `src/read/quality.ts`. Flagged articles are **held out** of the booklet. For a profiled site a short piece, or a prose poem ending without a full stop, is normal and isn't held. With an API key, Claude extracts the body, kept only if every paragraph is found word for word in the page (`src/read/verify.ts`). |
 | Typeset (Nunjucks, pagedjs-cli) | Paged.js in `book.html`, rendered from the issue in IndexedDB. |
 | QA (pdftotext, Paged.js warnings) | Run on the laid-out pages (`src/read/qa.ts`): text integrity, in order, for every paragraph and footnote (hard); unintended blank pages (hard); overflow and Paged.js layout loops (hard); widows, orphans, stranded subheads, low-dpi images (soft). A booklet with errors won't impose without `&force=1`. |
 | Impose (pdfjam) | `src/read/impose.ts`. Pages move onto A4 landscape sheets in saddle-stitch order, with creep. |
@@ -65,18 +112,16 @@ These are worked around in the code; keep them in mind when editing the house CS
 - A margin-free page loses about 3 mm; the cover is 206 mm tall.
 - Footnotes are moved out of `.book`, so their font is named in each house file, and the rule above them belongs to the first note.
 
-### Fetching without a server
+### A proxy of your own
 
-Browsers can't read other sites' pages directly. The public proxies in Settings work for most small sites but are rate-limited and unreliable. The **bookmarklet** (Read page) never needs one: drag it to the bookmarks bar, open an article, click it.
-
-For a steadier proxy, a free Cloudflare Worker you own:
+Without the extension, Desk uses the public proxies in Settings, which are rate-limited and unreliable. A free Cloudflare Worker you own is steadier:
 
 ```js
 export default {
   async fetch(req) {
     const url = new URL(req.url).searchParams.get('url');
     if (!url) return new Response('?url=', { status: 400 });
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Desk reader)' } });
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DeskReader/0.1; personal reading)' } });
     const out = new Response(res.body, res);
     out.headers.set('Access-Control-Allow-Origin', 'https://millerjames01.github.io');
     return out;
@@ -84,7 +129,7 @@ export default {
 };
 ```
 
-Add `https://<worker>.workers.dev/?url={url}` at the top of the proxy list.
+Add `https://<worker>.workers.dev/?url={url}` at the top of the proxy list. Desk still reads `robots.txt` and spaces requests through it.
 
 ## Drafts
 
@@ -113,7 +158,8 @@ npm test           # vitest
 npm run build      # typecheck + build to dist/
 ```
 
-- `src/read/`: the booklet (extract, quality, skins, render, house CSS, qa, impose, sample issue)
+- `src/read/`: the booklet (sites and editions, walk, transport, extract, quality, skins, render, house CSS, qa, impose, sample issue)
+- `extension/`: Desk Reader (Manifest V3, no build step); `robots.js` is shared with the app
 - `src/book/`: `book.html`, the typesetting page
 - `src/drafts/`, `src/publish/`: logic for the other rooms
 - `src/pages/`: the React views

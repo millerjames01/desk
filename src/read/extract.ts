@@ -47,7 +47,7 @@ export function domainOf(url: string): string {
   }
 }
 
-function meta(doc: Document, ...names: string[]): string {
+export function meta(doc: Document, ...names: string[]): string {
   for (const n of names) {
     const el = doc.querySelector(`meta[property="${n}"], meta[name="${n}"], meta[itemprop="${n}"]`);
     const v = el?.getAttribute('content')?.trim();
@@ -56,7 +56,7 @@ function meta(doc: Document, ...names: string[]): string {
   return '';
 }
 
-function isoDate(s: string): string {
+export function isoDate(s: string): string {
   if (!s) return '';
   const m = s.match(/\d{4}-\d{2}-\d{2}/);
   if (m) return m[0];
@@ -132,6 +132,14 @@ function turndown(): TurndownService {
       return `\n\n![${alt}](${img.getAttribute('src')}${caption ? ` "${caption}"` : ''})\n\n`;
     },
   });
+  // Layout-dependent pieces (spaced lines, indents) keep their whitespace.
+  td.addRule('verse', {
+    filter: (node) => /white-space:\s*pre/i.test((node as HTMLElement).getAttribute?.('style') ?? '') && node.nodeName !== 'PRE',
+    replacement(_c, node) {
+      const text = (node as HTMLElement).innerText ?? node.textContent ?? '';
+      return `\n\n<pre class="verse">${text.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</pre>\n\n`;
+    },
+  });
   td.addRule('picture', { filter: ['picture'], replacement: (c) => c });
   td.addRule('loneImage', {
     filter: (node) => node.nodeName === 'IMG' && !node.closest('figure'),
@@ -153,6 +161,22 @@ export function cleanTitle(title: string, site: string): string {
   return m && normalize(m[2]).toLowerCase() === site.toLowerCase() ? m[1] : title;
 }
 
+/**
+ * A cleaned article body → Markdown, with its kept images. Shared by the
+ * Readability path and the site-profile path so both produce the same text.
+ */
+export function toMarkdown(container: HTMLElement, base: string, leadSrc: string, maxImages: number): { markdown: string; images: { src: string; caption: string }[]; words: number } {
+  stripJunk(container);
+  chooseImages(container, base, leadSrc, maxImages);
+  const markdown = turndown()
+    .turndown(container)
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  const images = [...markdown.matchAll(/!\[[^\]]*\]\((\S+?)(?:\s+"([^"]*)")?\)/g)].map((m) => ({ src: m[1], caption: m[2] ?? '' }));
+  const words = countWords(markdownBlocks(markdown).body.join(' '));
+  return { markdown, images, words };
+}
+
 export function extract(
   html: string,
   url: string,
@@ -166,8 +190,6 @@ export function extract(
 
   const container = doc.createElement('div');
   container.innerHTML = article?.content ?? '';
-  stripJunk(container);
-  chooseImages(container, base, lead ? new URL(lead, base).href : '', opts.maxImages);
   // Readability repeats the title as the first heading more often than not.
   const title = cleanTitle(normalize(article?.title || meta(doc, 'og:title') || doc.title || 'Untitled'), normalize(article?.siteName || meta(doc, 'og:site_name')));
   const first = container.querySelector('h1, h2');
@@ -179,12 +201,7 @@ export function extract(
   const firstText = normalize(firstPara?.textContent ?? '').replace(/^by\s+/i, '').toLowerCase();
   if (firstPara && author && firstText === author.toLowerCase()) firstPara.remove();
 
-  const markdown = turndown()
-    .turndown(container)
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-  const images = [...markdown.matchAll(/!\[[^\]]*\]\((\S+?)(?:\s+"([^"]*)")?\)/g)].map((m) => ({ src: m[1], caption: m[2] ?? '' }));
-  const words = countWords(markdownBlocks(markdown).body.join(' '));
+  const { markdown, images, words } = toMarkdown(container, base, lead ? new URL(lead, base).href : '', opts.maxImages);
 
   return {
     title,
