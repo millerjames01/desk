@@ -171,7 +171,7 @@ function cover(i: RenderInput, issueLabel: ReturnType<typeof labels>): string {
 </section>`;
     case 'b-grid':
       return `<section class="cover cover-b">
-  <div class="cover-top"><span>${esc(c.title)}</span><span>${esc(date.short)}</span></div>
+  <div class="cover-top"><span>${esc(c.title)}</span><span>${esc(issue.source ? `${issue.source.publication} · ${issue.source.edition}` : date.short)}</span></div>
   <div class="cover-num">${esc(issueLabel.numberLabel)}</div>
   <ul class="cover-list">${list}</ul>
 </section>`;
@@ -187,7 +187,8 @@ function cover(i: RenderInput, issueLabel: ReturnType<typeof labels>): string {
 function contents(i: RenderInput): string {
   const row = (a: Article, n: number) => {
     const skin = resolveSkin(a.domain, i.pubs, a.publication);
-    const who = [a.author, skin.name].filter(Boolean).map(esc).join(' · ');
+    // In a booklet of one edition the journal goes without saying.
+    const who = [a.author, i.issue.source ? '' : skin.name].filter(Boolean).map(esc).join(' · ');
     return `<li><a class="toc-link" href="#${a.id}"><span class="toc-n">${n}</span><span class="toc-title">${esc(a.title)}</span><span class="toc-who">${who}</span></a></li>`;
   };
   const long = i.articles.filter((a) => !a.shortTake);
@@ -231,17 +232,20 @@ function article(a: Article, n: number, i: RenderInput, vars: string[], firstSho
   const byline = house === 'b-grid'
     ? `<div class="dek-row"><p class="dek">${esc(a.dek)}</p><div class="byline">${esc(a.author)}${a.author ? '<br>' : ''}${a.read_minutes} min read</div></div>`
     : `${a.dek ? `<p class="dek">${esc(a.dek)}</p>` : ''}${a.author ? `<div class="byline">${esc(a.author)}</div>` : ''}`;
-  // A Short Take opens compactly: journal, title, author, and the text follows on the same page.
+  // A Short Take opens compactly: journal (or, in one journal's edition, its category), title, author.
+  const single = !!i.issue.source;
+  const shortKicker = single ? a.category || '' : skin.name;
+  const shortSection = single && !i.articles.some((x) => !x.shortTake) ? i.issue.source!.edition : 'Short Takes';
   const head = a.shortTake
     ? `<header class="article-head short-head">
-  <div class="kicker">${esc(skin.name)}</div>
+  ${shortKicker ? `<div class="kicker">${esc(shortKicker)}</div>` : ''}
   <h1 class="article-title">${esc(a.title)}</h1>
   ${a.author ? `<div class="byline">${esc(a.author)}</div>` : ''}
 </header>`
     : '';
   if (head) {
     return `<article ${attrs}>
-<span class="rh-title">${esc(a.title)}</span><span class="rh-section">Short Takes</span>
+<span class="rh-title">${esc(a.title)}</span><span class="rh-section">${esc(shortSection)}</span>
 ${head}
 <div class="article-body" data-article="${a.id}">${bodyHtml(a, i.imageUrl, opener || defaultOpener(house), skin.ornament)}</div>
 <p class="source-note">${source}</p>

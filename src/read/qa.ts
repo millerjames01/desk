@@ -76,14 +76,17 @@ export function compareBlocks(blocks: string[], loc: Located, article: string): 
     }
     pos = at + s.length;
   }
-  const expected = new Map<string, number>();
-  for (const b of blocks) {
-    const s = squash(b);
-    if (s.length >= 24) expected.set(s, (expected.get(s) ?? 0) + 1);
-  }
-  for (const [s, n] of expected) {
-    let count = 0;
-    for (let i = loc.text.indexOf(s); i >= 0; i = loc.text.indexOf(s, i + 1)) count++;
+  // Count each block the same way on both sides: a short paragraph that also
+  // sits inside a longer one (a refrain) is found several times in each.
+  const occurrences = (hay: string, s: string) => {
+    let n = 0;
+    for (let i = hay.indexOf(s); i >= 0; i = hay.indexOf(s, i + 1)) n++;
+    return n;
+  };
+  const source = blocks.map(squash).join('');
+  for (const s of new Set(blocks.map(squash).filter((x) => x.length >= 24))) {
+    const n = occurrences(source, s);
+    const count = occurrences(loc.text, s);
     if (count > n) {
       const first = loc.text.indexOf(s);
       const second = loc.text.indexOf(s, first + 1);

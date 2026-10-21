@@ -63,9 +63,9 @@ export function EditionBuilder({ data }: { data: Data }) {
     setStories(null);
   });
 
-  const findStories = (e: Edition) => p && run(`Finding the stories in ${e.label}… (a few seconds per page)`, async () => {
-    setEdition(e);
-    const found = await listStories(p, e, await bestTransport(data.settings.proxies));
+  const findStories = (e: Edition, labelFromPage = false) => p && run(`Finding the stories in ${e.label}… (a few seconds per page)`, async () => {
+    const { stories: found, title } = await listStories(p, e, await bestTransport(data.settings.proxies));
+    setEdition(labelFromPage && title ? { ...e, label: title } : e);
     if (!found.length) show('No stories found on that page. Check the edition, or the site profile under Sites.', 'bad');
     setStories(found.map((s) => ({ ...s, on: true })));
   });
@@ -98,7 +98,7 @@ export function EditionBuilder({ data }: { data: Data }) {
           if (!prof) return show('No site profile for that address. Add one under Sites, or capture its stories one by one.', 'bad');
           setDomain(prof.domain);
           const m = pasted.match(/\/(\d{4})\/(\d{2})\/?$/);
-          findStories({ label: m ? `${m[1]}-${m[2]}` : decodeURIComponent(new URL(pasted).pathname.replace(/\/$/, '').split('/').pop() ?? pasted).replace(/-/g, ' '), url: pasted, month: m ? `${m[1]}-${m[2]}` : undefined });
+          findStories({ label: m ? `${m[1]}-${m[2]}` : decodeURIComponent(new URL(pasted).pathname.replace(/\/$/, '').split('/').pop() ?? pasted).replace(/-/g, ' '), url: pasted, month: m ? `${m[1]}-${m[2]}` : undefined }, !m);
         }}>Use it</button>
       </div>
       {busy && <p className="muted">{busy}</p>}

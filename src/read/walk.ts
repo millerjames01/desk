@@ -7,9 +7,9 @@
 import { get, kvGet, kvSet, now, put } from '../db';
 import type { Issue, Settings } from '../types';
 import { addFromHtml, DuplicateError } from './articles';
-import { parseHtml } from './extract';
+import { cleanTitle, meta, parseHtml } from './extract';
 import { editionStories, issueEditions, monthEditions, type Edition, type SiteProfile, type StoryLink } from './sites';
-import { slugify } from './text';
+import { normalize, slugify } from './text';
 import type { Transport } from './transport';
 
 export async function listEditions(p: SiteProfile, t: Transport): Promise<Edition[]> {
@@ -18,8 +18,15 @@ export async function listEditions(p: SiteProfile, t: Transport): Promise<Editio
   return issueEditions(parseHtml(html, p.edition.index), p);
 }
 
-export async function listStories(p: SiteProfile, edition: Edition, t: Transport): Promise<StoryLink[]> {
-  return editionStories(p, edition, async (url) => parseHtml(await t.fetchText(url), url));
+/** The edition's stories, and the edition page's own title (for an address pasted in). */
+export async function listStories(p: SiteProfile, edition: Edition, t: Transport): Promise<{ stories: StoryLink[]; title: string }> {
+  let title = '';
+  const stories = await editionStories(p, edition, async (url) => {
+    const doc = parseHtml(await t.fetchText(url), url);
+    title ||= cleanTitle(normalize(meta(doc, 'og:title') || doc.title), p.name);
+    return doc;
+  });
+  return { stories, title };
 }
 
 export function editionIssueId(p: SiteProfile, edition: Edition, at = new Date()): string {

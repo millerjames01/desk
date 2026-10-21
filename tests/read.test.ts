@@ -157,6 +157,10 @@ describe('QA text integrity', () => {
     const items = compareBlocks(blocks, loc(['First paragraph of the piece. Second paragraph that is long enough to count.', 'Second paragraph that is long enough to count. Third.']), 'A');
     expect(items.some((i) => i.message.startsWith('Repeated'))).toBe(true);
   });
+  it('a refrain repeated on purpose is not a duplicate', () => {
+    const refrain = ['I am writing because your name showed up.', 'Hello. I am writing because your name showed up.', 'Then the rest of the letter, long enough.'];
+    expect(compareBlocks(refrain, loc([refrain.join(' ')]), 'A')).toEqual([]);
+  });
   it('fails on blocks out of order', () => {
     const items = compareBlocks(blocks, loc(['Second paragraph that is long enough to count. First paragraph of the piece. Third.']), 'A');
     expect(items.length).toBeGreaterThan(0);

@@ -19,6 +19,12 @@ export const BUILT_IN: Record<string, Skin> = {
   default: { kicker: '{section} · {read_minutes} min read' },
   'theatlantic.com': { name: 'The Atlantic', accent: '#333333', ornament: '◆', opener_variant: 'smallcaps' },
   'aeon.co': { name: 'Aeon', rule: 'double', ornament: '❧' },
+  // The flash journals Desk has site profiles for (design-reference/SOURCES.md).
+  'smokelong.com': { name: 'SmokeLong Quarterly', ornament: '■', title_case: 'as-is' },
+  'vestalreview.net': { name: 'Vestal Review', title_case: 'small-caps', rule: 'double' },
+  'lost-balloon.com': { name: 'Lost Balloon', ornament: '◆' },
+  'havehashad.com': { name: 'HAD', ornament: '※', title_case: 'as-is' },
+  'xraylitmag.com': { name: 'X-R-A-Y', ornament: '—', title_case: 'as-is' },
 };
 
 /** FNV-1a: small, stable across browsers and versions. */

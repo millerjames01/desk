@@ -69,10 +69,11 @@ export function checkArticle(markdown: string, rawVisibleWords: number): Flag[] 
 
 /**
  * Flags that keep an article out of the booklet. From a site profile, which
- * knows where the story is, a short piece or one ending without a full stop
- * (prose poems do) is normal, and a trimmed bio is only a note.
+ * knows where the story is, a short piece, one ending without a full stop
+ * (prose poems do) or one that repeats a paragraph on purpose is normal, and
+ * a trimmed bio is only a note. The flags still show.
  */
 export function holds(flags: Flag[], profiled: boolean): boolean {
-  const soft = profiled ? ['thin', 'mid-sentence', 'trimmed', 'low-ratio'] : ['trimmed'];
+  const soft = profiled ? ['thin', 'mid-sentence', 'trimmed', 'low-ratio', 'duplicates'] : ['trimmed'];
   return flags.some((f) => !soft.includes(f.code));
 }
