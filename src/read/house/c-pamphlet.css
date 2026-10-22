@@ -27,13 +27,14 @@
 
 /* Contents */
 .house-c-pamphlet .contents { text-align: center; }
-.house-c-pamphlet .contents-title { font-size: 9pt; font-weight: 400; letter-spacing: 0.3em; text-transform: uppercase; margin: 22mm 0 14mm; }
+.house-c-pamphlet .contents-title { font-size: 9pt; font-weight: 400; letter-spacing: 0.3em; text-transform: uppercase; margin: 14mm 0 10mm; }
 .house-c-pamphlet .toc-link { display: block; text-align: center; }
 .house-c-pamphlet .toc-n { display: none; }
 .house-c-pamphlet .toc-title { display: block; font-size: 10pt; letter-spacing: 0.14em; text-transform: uppercase; }
-.house-c-pamphlet .toc-who { display: block; font-style: italic; font-size: 9.5pt; margin-top: 0.8mm; }
-.house-c-pamphlet .toc-link::after { display: block; content: "· " target-counter(attr(href), page) " ·"; font-size: 9pt; margin-top: 0.8mm; }
-.house-c-pamphlet .toc li { margin-bottom: 7mm; }
+.house-c-pamphlet .toc-who { display: inline; font-style: italic; font-size: 9.5pt; }
+/* Two lines an entry: the title, then the author with the page. */
+.house-c-pamphlet .toc-link::after { content: " · " target-counter(attr(href), page); font-size: 9pt; font-style: italic; }
+.house-c-pamphlet .toc li { margin-bottom: 5mm; }
 
 /* Opener */
 .house-c-pamphlet .article-head { padding-top: 11mm; text-align: center; margin-bottom: 10.5mm; }
@@ -63,6 +64,7 @@
 .house-c-pamphlet .article-body figcaption { text-align: center; font-style: italic; color: #4A4740; }
 .print .house-c-pamphlet .article-body figcaption { color: #333; }
 .house-c-pamphlet .end-mark { display: block; text-align: center; text-indent: 0; margin-top: 4.2mm; }
+.house-c-pamphlet .short .end-mark { margin-top: 2mm; }
 .house-c-pamphlet .end-mark::after { padding: 0; font-size: 10.5pt; }
 
 .house-c-pamphlet .source-note { text-align: center; font-style: italic; color: #4A4740; }

@@ -37,7 +37,7 @@ The source survey is in [`design-reference/SOURCES.md`](design-reference/SOURCES
 | Vestal Review | an issue | from the survey; check on first use |
 | Lost Balloon | a month | checked |
 | HAD | a month | checked |
-| X-R-A-Y | a month | story pages checked; the month archive not yet seen |
+| X-R-A-Y | a month | checked |
 | Flash Frog | — | no profile yet; capture pages one at a time |
 
 A profile finds the story, not a guess at it: title, author, date, body, and what to strip (audio players, share bars, bios). When a profile's body selector finds nothing, the page goes through Readability instead and the article is held out with a note that the site may have changed.

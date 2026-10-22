@@ -78,7 +78,8 @@
 .short-takes-opener { break-before: page; padding-top: 50mm; text-align: center; }
 .short-takes-opener h2 { font-size: calc(var(--title-size) * 0.85); font-weight: var(--title-weight, 400); margin: 0 0 4mm; }
 .short-takes-opener p { color: var(--muted); margin: 0; }
-.article.short { break-before: auto; margin-top: 11mm; }
+.article.short { break-before: auto; margin-top: 9mm; }
+.article.short .source-note { margin-top: 3mm; }
 .article.short.first-short, .article.short.new-page, .recto-starts .article.short.first-short { break-before: page; margin-top: 0; }
 .article.short.keep { break-inside: avoid; }
 .book .article .short-head { margin-bottom: 5mm; padding-top: 0; border: 0; }
@@ -199,5 +200,6 @@
   @bottom-left { content: none; } @bottom-center { content: none; } @bottom-right { content: none; }
 }
 /* Openers drop the running head (book.ts marks them). */
-.pagedjs_page.opener .pagedjs_margin-top > * { visibility: hidden; }
-.pagedjs_page.pad-page .pagedjs_margin > * { visibility: hidden; }
+/* The box itself, not just its text: house A draws its hairline on the box. */
+.pagedjs_page.opener .pagedjs_margin-top { visibility: hidden; }
+.pagedjs_page.pad-page .pagedjs_margin { visibility: hidden; }

@@ -7,7 +7,7 @@
 import MarkdownIt from 'markdown-it';
 import footnote from 'markdown-it-footnote';
 import type { Article, BookConfig, Issue, Publication } from '../types';
-import { COVER_DEFAULTS, issueDate, labels } from './issue';
+import { COVER_DEFAULTS, editionNumber, issueDate, labels } from './issue';
 import { kickerText, resolveSkin } from './skins';
 
 export interface RenderInput {
@@ -300,7 +300,7 @@ export interface Rendered {
 
 export function renderIssue(i: RenderInput): Rendered {
   const house = i.config.house_style;
-  const issueLabel = labels(house, i.config.title, i.number);
+  const issueLabel = labels(house, i.config.title, i.number, i.issue.source && editionNumber(i.issue.source, i.issue.id));
   const coverColour = i.issue.coverColour || COVER_DEFAULTS[house];
   const vars: string[] = [`.book { --cover: ${/^#[0-9a-f]{3,8}$/i.test(coverColour) ? coverColour : COVER_DEFAULTS[house]}; }`];
   const pads = Array.from({ length: i.pad }, () =>

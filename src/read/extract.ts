@@ -151,6 +151,27 @@ function turndown(): TurndownService {
   // Footnote references and definitions come through as plain text and
   // superscripts; markdown-it-footnote can't recover them reliably, so keep them visible.
   td.keep(['sup', 'sub']);
+  // Markdown can't open or close emphasis next to punctuation inside a word
+  // ("explained*, at my house*" stays literal), so such spans are written as
+  // inline HTML instead of asterisks.
+  for (const [tags, mark, html] of [[['em', 'i'], '*', 'em'], [['strong', 'b'], '**', 'strong']] as const) {
+    td.addRule(`safe-${html}`, {
+      filter: [...tags],
+      replacement(content, node) {
+        if (!content.trim()) return content;
+        const lead = content.match(/^\s*/)![0];
+        const trail = content.match(/\s*$/)![0];
+        const inner = content.trim();
+        // The characters just outside the span decide whether asterisks would open and close.
+        const before = lead ? ' ' : (node.previousSibling?.textContent ?? '').slice(-1);
+        const after = trail ? ' ' : (node.nextSibling?.textContent ?? '').slice(0, 1);
+        const word = /[\p{L}\p{N}]/u;
+        const punct = /[\p{P}\p{S}]/u;
+        const stuck = (punct.test(inner[0]) && word.test(before)) || (punct.test(inner[inner.length - 1]) && word.test(after)) || inner.includes(mark[0]);
+        return stuck ? `${lead}<${html}>${inner}</${html}>${trail}` : `${lead}${mark}${inner}${mark}${trail}`;
+      },
+    });
+  }
   return td;
 }
 

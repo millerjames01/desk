@@ -123,11 +123,11 @@ export const DEFAULT_PROFILES: SiteProfile[] = [
   {
     domain: 'xraylitmag.com',
     name: 'X-R-A-Y',
-    status: 'unverified',
+    status: 'checked',
     edition: { kind: 'month', archive: 'https://xraylitmag.com/{yyyy}/{mm}/', next: '.nav-previous a, a.next' },
     storyPath: '^/[^/]+-by-[^/]+/[^/]+/?$',
     story: { titleAuthor: { select: 'h1.entry-title', splitLast: ' by ' }, body: { select: '.entry-content', bioAfterLast: '.wp-block-spacer' } },
-    notes: 'Story pages checked; the month archive is WordPress’s default and not yet seen. Experimental forms: spacing is kept.',
+    notes: 'A few long pieces a month. Experimental forms: spacing is kept.',
   },
 ];
 
@@ -225,13 +225,22 @@ function isStory(url: string, p: SiteProfile): boolean {
 /** Story links on one page of an edition. With item rules, each link carries its listed date. */
 export function storyLinks(doc: Document, p: SiteProfile): StoryLink[] {
   const e = p.edition;
-  const seen = new Set<string>();
+  const seen = new Map<string, StoryLink>();
   const out: StoryLink[] = [];
+  // Archives often link a story several times (its date, its category, its title): keep the title, the longest.
+  const dateLike = (t: string) => !t || /^\s*(\w+ \d{1,2}, \d{4}|\d{4}-\d{2}-\d{2})/.test(t) || /^(read more|continue|more)/i.test(t);
   const add = (a: Element, date?: string) => {
     const url = new URL(a.getAttribute('href')!, doc.baseURI).href.split('#')[0];
-    if (!isStory(url, p) || seen.has(url)) return;
-    seen.add(url);
-    out.push({ url, label: text(a) || prettySlug(new URL(url).pathname), date });
+    if (!isStory(url, p)) return;
+    const label = text(a);
+    const known = seen.get(url);
+    if (known) {
+      if (!dateLike(label) && (dateLike(known.label) || label.length > known.label.length)) known.label = label;
+      return;
+    }
+    const link = { url, label: label || prettySlug(new URL(url).pathname), date };
+    seen.set(url, link);
+    out.push(link);
   };
   if (e.kind === 'month' && e.item && e.itemLink) {
     for (const item of doc.querySelectorAll(e.item)) {
@@ -244,6 +253,7 @@ export function storyLinks(doc: Document, p: SiteProfile): StoryLink[] {
     scope.querySelectorAll('a[href]').forEach((a) => add(a));
     if (!out.length) doc.querySelectorAll('a[href]').forEach((a) => add(a));
   }
+  for (const l of out) if (dateLike(l.label)) l.label = prettySlug(new URL(l.url).pathname);
   return out;
 }
 

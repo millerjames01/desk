@@ -121,3 +121,26 @@ export function numberWords(n: number): string {
   if (n < 100) return TENS[Math.floor(n / 10)] + (n % 10 ? '-' + ONES[n % 10].toLowerCase() : '');
   return String(n);
 }
+
+const UNITS: Record<string, number> = {
+  zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+  eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
+  twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90,
+};
+
+/** "Ninety-Three" → 93, "One Hundred and Two" → 102. Undefined if it isn't a number in words. */
+export function wordsToNumber(s: string): number | undefined {
+  const parts = s.toLowerCase().replace(/-/g, ' ').split(/\s+/).filter((w) => w && w !== 'and');
+  if (!parts.length) return undefined;
+  let total = 0;
+  let current = 0;
+  for (const w of parts) {
+    if (w in UNITS) current += UNITS[w];
+    else if (w === 'hundred') current = (current || 1) * 100;
+    else if (w === 'thousand') {
+      total += (current || 1) * 1000;
+      current = 0;
+    } else return undefined;
+  }
+  return total + current;
+}

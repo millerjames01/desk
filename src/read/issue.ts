@@ -1,5 +1,5 @@
 import type { HouseStyle, Issue } from '../types';
-import { numberWords, roman } from './text';
+import { numberWords, roman, wordsToNumber } from './text';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -34,7 +34,44 @@ export interface IssueLabels {
   mark: string;
 }
 
-export function labels(house: HouseStyle, title: string, number: number): IssueLabels {
+/**
+ * A booklet of one journal's edition carries that edition's number, not
+ * Marginalia's own count: "93" for SmokeLong's Issue Ninety-Three, the month
+ * for a journal that publishes by month.
+ */
+export interface EditionNumber {
+  publication: string;
+  number: number;
+  /** A month edition: `number` is the month, `label` its name. */
+  month?: boolean;
+  label: string;
+}
+
+export function editionNumber(source: NonNullable<Issue['source']>, issueId: string): EditionNumber | undefined {
+  const month = source.edition.match(/^(January|February|March|April|May|June|July|August|September|October|November|December) (\d{4})$/);
+  if (month) return { publication: source.publication, number: MONTHS.indexOf(month[1]) + 1, month: true, label: source.edition };
+  const digits = source.edition.match(/\d+/);
+  const words = source.edition.replace(/^(issue|no\.?|number|volume|vol\.?)\s+/i, '');
+  const n = digits ? parseInt(digits[0], 10) : wordsToNumber(words);
+  if (n !== undefined) return { publication: source.publication, number: n, label: source.edition };
+  if (/^\d{4}-\d{2}/.test(issueId)) return { publication: source.publication, number: parseInt(issueId.slice(5, 7), 10), month: true, label: source.edition };
+  return undefined;
+}
+
+export function labels(house: HouseStyle, title: string, number: number, edition?: EditionNumber): IssueLabels {
+  if (edition) {
+    const n = edition.number;
+    const two = String(n).padStart(2, '0');
+    const pub = edition.publication;
+    switch (house) {
+      case 'a-review':
+        return { number: n, numberLabel: edition.month ? edition.label : `No. ${n}`, mark: edition.month ? `${pub} · ${edition.label}` : `${pub} · No. ${n}` };
+      case 'b-grid':
+        return { number: n, numberLabel: two, mark: edition.month ? `${pub} · ${edition.label}` : `${pub} ${two}` };
+      case 'c-pamphlet':
+        return { number: n, numberLabel: edition.month ? edition.label : `Number ${numberWords(n)}`, mark: edition.month ? `${pub} · ${edition.label}` : `${pub} · ${roman(n)}` };
+    }
+  }
   const two = String(number).padStart(2, '0');
   switch (house) {
     case 'a-review':

@@ -5,7 +5,8 @@ import { autoSkin, findPublication, kickerText, newSkins, resolveSkin, safeAccen
 import { markdownBlocks, normalize, roman, squash } from '../src/read/text';
 import { verifyAgainstSource } from '../src/read/verify';
 import { compareBlocks } from '../src/read/qa';
-import { issueNumber, labels, nextIssueId } from '../src/read/issue';
+import { editionNumber, issueNumber, labels, nextIssueId } from '../src/read/issue';
+import { wordsToNumber } from '../src/read/text';
 import type { Publication } from '../src/types';
 
 const para = (n: number, seed: string) => Array.from({ length: n }, (_, i) => `${seed}${i}`).join(' ') + '.';
@@ -176,9 +177,34 @@ describe('issues', () => {
     expect(labels('c-pamphlet', 'Marginalia', 3).numberLabel).toBe('Number Three');
     expect(labels('a-review', 'Marginalia', 3).mark).toBe('Marginalia · No. 3');
   });
+  it('an edition booklet carries the edition’s own number', () => {
+    expect(wordsToNumber('Ninety-Three')).toBe(93);
+    expect(wordsToNumber('One Hundred and Two')).toBe(102);
+    expect(wordsToNumber('Autumn')).toBeUndefined();
+    const sl = editionNumber({ domain: 'smokelong.com', publication: 'SmokeLong Quarterly', edition: 'Issue Ninety-Three', url: '' }, '2026-10-smokelong-issue-ninety-three')!;
+    expect(sl.number).toBe(93);
+    expect(sl.month).toBeFalsy();
+    expect(labels('b-grid', 'Marginalia', 1, sl)).toMatchObject({ numberLabel: '93', mark: 'SmokeLong Quarterly 93' });
+    expect(labels('c-pamphlet', 'Marginalia', 1, sl).numberLabel).toBe('Number Ninety-three');
+    expect(editionNumber({ domain: 'v', publication: 'Vestal Review', edition: 'Issue 68', url: '' }, '2026-10-x')!.number).toBe(68);
+    const had = editionNumber({ domain: 'h', publication: 'HAD', edition: 'October 2026', url: '' }, '2026-10-had-october-2026')!;
+    expect(labels('b-grid', 'Marginalia', 1, had)).toMatchObject({ numberLabel: '10', mark: 'HAD · October 2026' });
+    expect(labels('a-review', 'Marginalia', 1, had).numberLabel).toBe('October 2026');
+  });
   it('next id is this month, then a suffix', () => {
     const d = new Date(2026, 10, 5);
     expect(nextIssueId([], d)).toBe('2026-11');
     expect(nextIssueId([{ id: '2026-11' }], d)).toBe('2026-11b');
+  });
+});
+
+describe('emphasis that Markdown cannot express', () => {
+  it('becomes inline HTML, so no asterisks print', async () => {
+    const { extract: ex } = await import('../src/read/extract');
+    const body = `<p>${'word '.repeat(320)}</p><p><em>My name was picked first,</em> she explained<em>, Harem should be at my house</em>. And <em>plain</em> stays plain.</p>`;
+    const md = ex(`<html><body><article>${body}</article></body></html>`, 'https://x.org/a', { maxImages: 0 }).markdown;
+    expect(md).toContain('*My name was picked first,*');
+    expect(md).toContain('explained<em>, Harem should be at my house</em>.');
+    expect(md).toContain('*plain*');
   });
 });
