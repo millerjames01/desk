@@ -1,4 +1,4 @@
-import type { HouseStyle, Issue } from '../types';
+import type { EditionRef, HouseStyle, Issue } from '../types';
 import { numberWords, roman, wordsToNumber } from './text';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -45,9 +45,44 @@ export interface EditionNumber {
   /** A month edition: `number` is the month, `label` its name. */
   month?: boolean;
   label: string;
+  /** Several editions: "07–09", "92–93". */
+  range?: string;
+}
+
+/**
+ * Several editions under one name: "July–September 2026" for months,
+ * "Issues 92–93" for numbered issues, else the labels joined.
+ */
+export function editionsLabel(editions: EditionRef[]): string {
+  if (editions.length === 1) return editions[0].label;
+  const first = editions[0], last = editions[editions.length - 1];
+  if (first.month && last.month) {
+    const [fy, fm] = first.month.split('-').map(Number), [ly, lm] = last.month.split('-').map(Number);
+    return fy === ly ? `${MONTHS[fm - 1]}–${MONTHS[lm - 1]} ${ly}` : `${MONTHS[fm - 1]} ${fy}–${MONTHS[lm - 1]} ${ly}`;
+  }
+  const nums = editions.map((e) => editionNumberOf(e.label));
+  if (nums.every((n) => n !== undefined)) return `Issues ${nums[0]}–${nums[nums.length - 1]}`;
+  return editions.map((e) => e.label).join(' & ');
+}
+
+function editionNumberOf(label: string): number | undefined {
+  const digits = label.match(/\d+/);
+  return digits ? parseInt(digits[0], 10) : wordsToNumber(label.replace(/^(issue|no\.?|number|volume|vol\.?)\s+/i, ''));
 }
 
 export function editionNumber(source: NonNullable<Issue['source']>, issueId: string): EditionNumber | undefined {
+  const many = source.editions && source.editions.length > 1 ? source.editions : undefined;
+  if (many) {
+    const first = many[0], last = many[many.length - 1];
+    const two = (n: number) => String(n).padStart(2, '0');
+    if (first.month && last.month) {
+      const a = Number(first.month.slice(5)), b = Number(last.month.slice(5));
+      return { publication: source.publication, number: b, month: true, label: source.edition, range: `${two(a)}–${two(b)}` };
+    }
+    const a = editionNumberOf(first.label), b = editionNumberOf(last.label);
+    if (a !== undefined && b !== undefined) return { publication: source.publication, number: b, label: source.edition, range: `${a}–${b}` };
+    return undefined;
+  }
   const month = source.edition.match(/^(January|February|March|April|May|June|July|August|September|October|November|December) (\d{4})$/);
   if (month) return { publication: source.publication, number: MONTHS.indexOf(month[1]) + 1, month: true, label: source.edition };
   const digits = source.edition.match(/\d+/);
@@ -59,6 +94,18 @@ export function editionNumber(source: NonNullable<Issue['source']>, issueId: str
 }
 
 export function labels(house: HouseStyle, title: string, number: number, edition?: EditionNumber): IssueLabels {
+  if (edition?.range) {
+    const pub = edition.publication;
+    const mark = `${pub} · ${edition.label}`;
+    switch (house) {
+      case 'a-review':
+        return { number: edition.number, numberLabel: edition.month ? edition.label : `Nos. ${edition.range}`, mark };
+      case 'b-grid':
+        return { number: edition.number, numberLabel: edition.range, mark };
+      case 'c-pamphlet':
+        return { number: edition.number, numberLabel: edition.label, mark };
+    }
+  }
   if (edition) {
     const n = edition.number;
     const two = String(n).padStart(2, '0');

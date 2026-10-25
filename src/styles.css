@@ -165,6 +165,7 @@ a.row:hover strong { color: var(--accent); }
 /* Editions */
 .editions { display: flex; flex-wrap: wrap; gap: 6px; }
 .editions .on { border-color: var(--accent); }
+.eyebrow-small { margin: 8px 0 2px; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .checklist { list-style: none; padding: 0; margin: 0; columns: 2 260px; }
 .checklist li { break-inside: avoid; padding: 3px 0; }
 .walk progress { width: 100%; accent-color: var(--accent); }

@@ -29,6 +29,23 @@ export function readingOrder(articles: Article[]): Article[] {
   return [...articles.filter((a) => !a.shortTake), ...articles.filter((a) => a.shortTake)];
 }
 
+export interface EditionGroup {
+  label: string;
+  articles: Article[];
+}
+
+/**
+ * A booklet of several editions reads edition by edition, oldest first; within
+ * each, long reads then Short Takes. Undefined for a booklet of one edition.
+ */
+export function editionGroups(issue: Issue, articles: Article[]): EditionGroup[] | undefined {
+  const eds = issue.source?.editions;
+  if (!eds || eds.length < 2) return undefined;
+  const groups = eds.map((e) => ({ label: e.label, articles: [] as Article[] }));
+  for (const a of articles) (groups.find((g) => g.label === a.section) ?? groups[groups.length - 1]).articles.push(a);
+  return groups.filter((g) => g.articles.length).map((g) => ({ ...g, articles: readingOrder(g.articles) }));
+}
+
 /** Under this, a Short Take is never split across pages. */
 export const KEEP_WHOLE_WORDS = 250;
 
@@ -172,7 +189,7 @@ function cover(i: RenderInput, issueLabel: ReturnType<typeof labels>): string {
     case 'b-grid':
       return `<section class="cover cover-b">
   <div class="cover-top"><span>${esc(c.title)}</span><span>${esc(issue.source ? `${issue.source.publication} · ${issue.source.edition}` : date.short)}</span></div>
-  <div class="cover-num">${esc(issueLabel.numberLabel)}</div>
+  <div class="cover-num${issueLabel.numberLabel.length > 2 ? ' long' : ''}">${esc(issueLabel.numberLabel)}</div>
   <ul class="cover-list">${list}</ul>
 </section>`;
     case 'c-pamphlet':
@@ -191,6 +208,12 @@ function contents(i: RenderInput): string {
     const who = [a.author, i.issue.source ? '' : skin.name].filter(Boolean).map(esc).join(' · ');
     return `<li><a class="toc-link" href="#${a.id}"><span class="toc-n">${n}</span><span class="toc-title">${esc(a.title)}</span><span class="toc-who">${who}</span></a></li>`;
   };
+  const groups = editionGroups(i.issue, i.articles);
+  if (groups) {
+    let n = 0;
+    const body = groups.map((g) => `<li class="toc-group"><span class="toc-group-title">${esc(g.label)}</span><ol class="toc toc-short">${g.articles.map((a) => row(a, ++n)).join('')}</ol></li>`).join('');
+    return `<section class="contents"><h2 class="contents-title">Contents</h2><ol class="toc">${body}</ol></section>`;
+  }
   const long = i.articles.filter((a) => !a.shortTake);
   const short = i.articles.filter((a) => a.shortTake);
   const rows = long.map((a, n) => row(a, n + 1)).join('');
@@ -201,7 +224,7 @@ function contents(i: RenderInput): string {
   return `<section class="contents"><h2 class="contents-title">Contents</h2><ol class="toc">${rows}${group}</ol></section>`;
 }
 
-function article(a: Article, n: number, i: RenderInput, vars: string[], firstShort = false): string {
+function article(a: Article, n: number, i: RenderInput, vars: string[], firstShort = false, afterOpener = false): string {
   const house = i.config.house_style;
   const skin = resolveSkin(a.domain, i.pubs, a.publication, HOUSE_ORNAMENT[house]);
   const kicker = kickerText(skin.kicker, { section: a.section, read_minutes: a.read_minutes, publication: skin.name });
@@ -211,7 +234,7 @@ function article(a: Article, n: number, i: RenderInput, vars: string[], firstSho
   const opener = skin.opener_variant || '';
   const attrs = [
     `id="${a.id}"`,
-    `class="article art-${n + 1}${a.shortTake ? ` short${a.words < KEEP_WHOLE_WORDS ? ' keep' : ''}${firstShort ? ' first-short' : ''}${i.breakBefore?.has(a.id) ? ' new-page' : ''}` : ''}"`,
+    `class="article art-${n + 1}${a.shortTake ? ` short${a.words < KEEP_WHOLE_WORDS ? ' keep' : ''}${firstShort ? ' first-short' : ''}${i.breakBefore?.has(a.id) ? ' new-page' : ''}` : ''}${afterOpener ? ' after-opener' : ''}"`,
     `data-pub="${esc(skin.key)}"`,
     opener ? `data-opener="${opener}"` : '',
     skin.rule ? `data-rule="${skin.rule}"` : '',
@@ -235,7 +258,8 @@ function article(a: Article, n: number, i: RenderInput, vars: string[], firstSho
   // A Short Take opens compactly: journal (or, in one journal's edition, its category), title, author.
   const single = !!i.issue.source;
   const shortKicker = single ? a.category || '' : skin.name;
-  const shortSection = single && !i.articles.some((x) => !x.shortTake) ? i.issue.source!.edition : 'Short Takes';
+  const several = (i.issue.source?.editions?.length ?? 0) > 1;
+  const shortSection = several ? a.section || i.issue.source!.edition : single && !i.articles.some((x) => !x.shortTake) ? i.issue.source!.edition : 'Short Takes';
   const head = a.shortTake
     ? `<header class="article-head short-head">
   ${shortKicker ? `<div class="kicker">${esc(shortKicker)}</div>` : ''}
@@ -306,13 +330,25 @@ export function renderIssue(i: RenderInput): Rendered {
   const pads = Array.from({ length: i.pad }, () =>
     i.config.pad_with === 'notes' ? '<section class="pad pad-notes"><h2>Notes</h2><div class="ruled"></div></section>' : '<section class="pad pad-blank"><p class="pad-fill">&nbsp;</p></section>',
   ).join('');
-  const ordered = readingOrder(i.articles);
-  const firstShort = ordered.findIndex((a) => a.shortTake);
-  const hasLong = ordered.some((a) => !a.shortTake);
-  const shortCount = ordered.length - (firstShort < 0 ? ordered.length : firstShort);
-  const articles = ordered
-    .map((a, n) => (n === firstShort && hasLong ? `<section class="short-takes-opener"><h2>Short Takes</h2><p>${shortCount} short piece${shortCount === 1 ? '' : 's'}</p></section>\n` : '') + article(a, n, i, vars, n === firstShort))
-    .join('\n');
+  const groups = editionGroups(i.issue, i.articles);
+  let ordered: Article[];
+  let articles: string;
+  if (groups) {
+    // Each edition opens with its name; its first piece follows on the same page.
+    ordered = groups.flatMap((g) => g.articles);
+    let n = 0;
+    articles = groups
+      .map((g) => `<section class="edition-opener"><div class="eo-kicker">${esc(i.issue.source!.publication)}</div><h2>${esc(g.label)}</h2><p>${g.articles.length} piece${g.articles.length === 1 ? '' : 's'}</p></section>\n` + g.articles.map((a, k) => article(a, n++, i, vars, false, k === 0)).join('\n'))
+      .join('\n');
+  } else {
+    ordered = readingOrder(i.articles);
+    const firstShort = ordered.findIndex((a) => a.shortTake);
+    const hasLong = ordered.some((a) => !a.shortTake);
+    const shortCount = ordered.length - (firstShort < 0 ? ordered.length : firstShort);
+    articles = ordered
+      .map((a, n) => (n === firstShort && hasLong ? `<section class="short-takes-opener"><h2>Short Takes</h2><p>${shortCount} short piece${shortCount === 1 ? '' : 's'}</p></section>\n` : '') + article(a, n, i, vars, n === firstShort))
+      .join('\n');
+  }
   const html = `<div class="book house-${house}${i.config.recto_starts ? ' recto-starts' : ''}">
 ${cover(i, issueLabel).replace('<div class="cover-top">', `<div class="cover-top"><span class="rh-issue">${esc(issueLabel.mark)}</span>`)}
 ${contents({ ...i, articles: ordered })}

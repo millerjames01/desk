@@ -11,6 +11,7 @@ export const DEFAULT_BOOK: BookConfig = {
   pad_with: 'blank',
   printer: 'TBD',
   place: '',
+  target_pages: 48,
 };
 
 /**

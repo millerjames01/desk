@@ -22,12 +22,23 @@ Everything runs in the browser and lives in IndexedDB on the device. There is no
 
 ## Read: booklets of editions
 
-A booklet is one edition of one journal: SmokeLong's Issue Ninety-Three, HAD's October, Lost Balloon's September. On the Read page, **From an edition**:
+A booklet is one journal, never a mix: SmokeLong's Issue Ninety-Three, HAD's October, or Lost Balloon's July–September when a single month is too thin to make a book. On the Read page, **From an edition**:
 
-1. Choose the journal, then an issue or a month (or paste an edition's address).
-2. Desk lists every story in it, from the issue page or the month's archive, following "older posts" pages as needed. Untick any you don't want.
-3. **Make the booklet.** Desk fetches the stories one at a time, a few seconds apart, into a new issue titled with the journal and edition. You can leave the page; a closed tab resumes with **Carry on**.
-4. Typeset, check, print.
+1. Choose the journal, then one or more issues or months (or paste an edition's address), and **Find the stories**.
+2. Desk lists every story in them, grouped by edition, from the issue page or the month's archive, following "older posts" pages as needed. Untick any you don't want.
+3. Leave **Add earlier editions** on to fill a thin booklet. When the chosen editions are walked and the booklet is still short of about 85% of the target (Settings → *Fill a booklet to about*, 48 pages by default), the walk lists the next earlier edition and carries on, up to six more.
+4. **Make the booklet.** Desk fetches the stories one at a time, a few seconds apart, into a new issue titled with the journal and edition (or the run of them: "July–September 2026", "Issues 92–93"). You can leave the page; a closed tab resumes with **Carry on**.
+5. Typeset, check, print.
+
+A booklet of several editions reads oldest first. Each edition opens with a half-title, the contents are grouped by edition, Short Takes stay with their own edition, and the cover carries the range ("07–09" in Grid).
+
+| Journal | A booklet is usually |
+|---|---|
+| SmokeLong Quarterly | one issue (about 40 pages) |
+| X-R-A-Y | one month, two in a quiet month |
+| Lost Balloon | a season, three months (about 16 pages a month) |
+| HAD | two months |
+| Vestal Review | one or two issues |
 
 The source survey is in [`design-reference/SOURCES.md`](design-reference/SOURCES.md). The site profiles are in `src/read/sites.ts` and editable at Read → **Sites**, with a tester for any story URL.
 

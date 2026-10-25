@@ -174,6 +174,8 @@ export interface StoryLink {
   url: string;
   label: string;
   date?: string;
+  /** The edition it belongs to, when a booklet holds several. */
+  edition?: string;
 }
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];

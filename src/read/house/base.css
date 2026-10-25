@@ -75,6 +75,12 @@
 .recto-starts .article { break-before: right; }
 
 /* Short Takes: one after another, a new page only when too little is left. */
+/* Several editions in one booklet: each opens with its name, its first piece below. */
+.edition-opener { break-before: page; text-align: center; padding-top: 10mm; margin-bottom: 12mm; }
+.edition-opener .eo-kicker { font-size: 8pt; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.edition-opener h2 { font-size: calc(var(--title-size) * 0.85); font-weight: var(--title-weight, 400); margin: 2mm 0 1.5mm; }
+.edition-opener p { color: var(--muted); margin: 0; font-size: 9pt; }
+.article.after-opener, .recto-starts .article.after-opener, .article.short.after-opener { break-before: auto; margin-top: 0; }
 .short-takes-opener { break-before: page; padding-top: 50mm; text-align: center; }
 .short-takes-opener h2 { font-size: calc(var(--title-size) * 0.85); font-weight: var(--title-weight, 400); margin: 0 0 4mm; }
 .short-takes-opener p { color: var(--muted); margin: 0; }

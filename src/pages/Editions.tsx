@@ -5,7 +5,7 @@ import { addFromHtml, createIssue } from '../read/articles';
 import { nextIssueId } from '../read/issue';
 import { loadProfiles, saveProfiles } from '../read/profiles';
 import { SAMPLE_ISSUE } from '../read/sample';
-import { DEFAULT_PROFILES, extractWithProfile, profileFor, profileReport, type Edition, type SiteProfile, type StoryLink } from '../read/sites';
+import { DEFAULT_PROFILES, extractWithProfile, monthEditions, profileFor, profileReport, type Edition, type SiteProfile, type StoryLink } from '../read/sites';
 import { bestTransport, detectExtension, extensionTransport } from '../read/transport';
 import { createEditionIssue, currentWalk, listEditions, listStories, onWalk, remaining, startWalk, stopWalk, type WalkProgress } from '../read/walk';
 
@@ -30,15 +30,21 @@ export function ExtensionStatus({ version }: { version: string | null | undefine
   );
 }
 
-/** The main way to start an issue: one journal, one edition, all its stories. */
+/**
+ * The main way to start an issue: one journal, one or more of its editions,
+ * all their stories. With "fill", Desk adds earlier editions until the
+ * booklet reaches about the page target.
+ */
 export function EditionBuilder({ data }: { data: Data }) {
   const ext = useExtension();
+  const target = data.settings.book.target_pages;
   const [profiles, setProfiles] = useState<SiteProfile[]>(DEFAULT_PROFILES);
   const [domain, setDomain] = useState(DEFAULT_PROFILES[0].domain);
   const [editions, setEditions] = useState<Edition[] | null>(null);
-  const [edition, setEdition] = useState<Edition | null>(null);
+  const [selected, setSelected] = useState<Edition[]>([]);
   const [pasted, setPasted] = useState('');
   const [stories, setStories] = useState<(StoryLink & { on: boolean })[] | null>(null);
+  const [fill, setFill] = useState(true);
   const [busy, setBusy] = useState('');
   const [notice, show] = useNotice();
   useEffect(() => {
@@ -56,36 +62,57 @@ export function EditionBuilder({ data }: { data: Data }) {
       setBusy('');
     }
   };
+  const reset = () => { setEditions(null); setStories(null); setSelected([]); };
 
   const findEditions = () => p && run('Reading the list of editions…', async () => {
     setEditions(await listEditions(p, await bestTransport(data.settings.proxies)));
-    setEdition(null);
+    setSelected([]);
     setStories(null);
   });
 
-  const findStories = (e: Edition, labelFromPage = false) => p && run(`Finding the stories in ${e.label}… (a few seconds per page)`, async () => {
-    const { stories: found, title } = await listStories(p, e, await bestTransport(data.settings.proxies));
-    setEdition(labelFromPage && title ? { ...e, label: title } : e);
-    if (!found.length) show('No stories found on that page. Check the edition, or the site profile under Sites.', 'bad');
-    setStories(found.map((s) => ({ ...s, on: true })));
+  const toggle = (e: Edition) => setSelected((cur) => (cur.some((x) => x.url === e.url) ? cur.filter((x) => x.url !== e.url) : [...cur, e]));
+
+  const findStories = (chosen: Edition[], labelFromPage = false) => p && run(`Finding the stories in ${chosen.map((e) => e.label).join(', ')}… (a few seconds per page)`, async () => {
+    const t = await bestTransport(data.settings.proxies);
+    const found: (StoryLink & { on: boolean })[] = [];
+    const named: Edition[] = [];
+    for (const e of chosen) {
+      const { stories: list, title } = await listStories(p, e, t);
+      const ed = labelFromPage && title ? { ...e, label: title } : e;
+      named.push(ed);
+      found.push(...list.map((x) => ({ ...x, edition: ed.label, on: true })));
+    }
+    setSelected(named);
+    if (!found.length) show('No stories found. Check the edition, or the site profile under Sites.', 'bad');
+    setStories(found);
   });
 
+  /** Editions older than the oldest one chosen, nearest first: what "fill" draws on. */
+  const candidates = (): Edition[] => {
+    if (!p) return [];
+    const list = editions ?? (selected[0]?.month ? monthEditions(p, new Date(`${selected[0].month}-15T12:00:00`), 13) : []);
+    const idx = Math.max(...selected.map((s) => list.findIndex((x) => x.url === s.url)));
+    return idx < 0 ? [] : list.slice(idx + 1, idx + 7);
+  };
+
   const make = async () => {
-    if (!p || !edition || !stories) return;
+    if (!p || !selected.length || !stories) return;
     const chosen = stories.filter((s) => s.on);
-    const issue = await createEditionIssue(p, edition, chosen);
+    const more = fill ? candidates() : [];
+    const issue = await createEditionIssue(p, selected, chosen, { listOrder: editions ?? selected, fill: more.length ? { target, candidates: more } : undefined });
     go(`read/${issue.id}`);
     startWalk(issue.id, data.settings, await bestTransport(data.settings.proxies));
   };
 
   const chosen = stories?.filter((s) => s.on).length ?? 0;
+  const groups = selected.map((e) => ({ e, items: (stories ?? []).map((s, i) => ({ s, i })).filter(({ s }) => s.edition === e.label) }));
   return (
     <div className="card stack">
       <h3>From an edition</h3>
-      <p className="muted small">Choose a journal and one of its issues or months. Desk finds every story and fetches them, slowly, into a booklet of that edition.</p>
+      <p className="muted small">Choose a journal and one or more of its issues or months. Desk finds every story and fetches them, slowly, into a booklet of that journal.</p>
       <ExtensionStatus version={ext} />
       <div className="field-row">
-        <select value={domain} onChange={(e) => { setDomain(e.target.value); setEditions(null); setStories(null); setEdition(null); }}>
+        <select value={domain} onChange={(e) => { setDomain(e.target.value); reset(); }}>
           {profiles.map((x) => <option key={x.domain} value={x.domain}>{x.name}{x.status === 'unverified' ? ' (check on first use)' : ''}</option>)}
         </select>
         <button className="primary" disabled={!!busy} onClick={findEditions}>{p?.edition.kind === 'month' ? 'Months' : 'Issues'}</button>
@@ -97,36 +124,58 @@ export function EditionBuilder({ data }: { data: Data }) {
           const prof = profileFor(pasted, profiles);
           if (!prof) return show('No site profile for that address. Add one under Sites, or capture its stories one by one.', 'bad');
           setDomain(prof.domain);
+          setEditions(null);
           const m = pasted.match(/\/(\d{4})\/(\d{2})\/?$/);
-          findStories({ label: m ? `${m[1]}-${m[2]}` : decodeURIComponent(new URL(pasted).pathname.replace(/\/$/, '').split('/').pop() ?? pasted).replace(/-/g, ' '), url: pasted, month: m ? `${m[1]}-${m[2]}` : undefined }, !m);
+          const e: Edition = m
+            ? { label: monthEditions(prof, new Date(`${m[1]}-${m[2]}-15T12:00:00`), 1)[0].label, url: pasted, month: `${m[1]}-${m[2]}` }
+            : { label: decodeURIComponent(new URL(pasted).pathname.replace(/\/$/, '').split('/').pop() ?? pasted).replace(/-/g, ' '), url: pasted };
+          findStories([e], !m);
         }}>Use it</button>
       </div>
       {busy && <p className="muted">{busy}</p>}
       {notice}
       {editions && !stories && (
-        <div className="editions">
-          {editions.slice(0, 24).map((e) => (
-            <button key={e.url} className={edition?.url === e.url ? 'on' : ''} disabled={!!busy} onClick={() => findStories(e)}>{e.label}</button>
-          ))}
-          {!editions.length && <p className="muted">No editions found on the index page.</p>}
-        </div>
-      )}
-      {stories && edition && (
-        <div className="stack">
-          <p><strong>{p?.name} · {edition.label}</strong> <span className="muted">· {plural(stories.length, 'story', 'stories')} found</span> <button className="link" onClick={() => setStories(null)}>other editions</button></p>
-          <ul className="checklist">
-            {stories.map((s, i) => (
-              <li key={s.url}>
-                <label className="check">
-                  <input type="checkbox" checked={s.on} onChange={(e) => setStories(stories.map((x, j) => (j === i ? { ...x, on: e.target.checked } : x)))} />
-                  {s.label}{s.date ? <span className="muted small"> · {s.date}</span> : null}
-                </label>
-              </li>
+        <>
+          <div className="editions">
+            {editions.slice(0, 24).map((e) => (
+              <button key={e.url} className={selected.some((x) => x.url === e.url) ? 'on' : ''} disabled={!!busy} aria-pressed={selected.some((x) => x.url === e.url)} onClick={() => toggle(e)}>{e.label}</button>
             ))}
-          </ul>
+            {!editions.length && <p className="muted">No editions found on the index page.</p>}
+          </div>
+          <div className="actions">
+            <button className="primary" disabled={!!busy || !selected.length} onClick={() => findStories(selected)}>Find the stories</button>
+            <span className="muted small">{selected.length ? `${plural(selected.length, 'edition')} chosen.` : 'Choose one edition, or several to bind together.'}</span>
+          </div>
+        </>
+      )}
+      {stories && selected.length > 0 && (
+        <div className="stack">
+          <p>
+            <strong>{p?.name} · {selected.map((e) => e.label).join(', ')}</strong> <span className="muted">· {plural(stories.length, 'story', 'stories')} found</span>{' '}
+            <button className="link" onClick={() => setStories(null)}>other editions</button>
+          </p>
+          {groups.map(({ e, items }) => (
+            <div key={e.url}>
+              {groups.length > 1 && <p className="eyebrow-small">{e.label}</p>}
+              <ul className="checklist">
+                {items.map(({ s, i }) => (
+                  <li key={s.url}>
+                    <label className="check">
+                      <input type="checkbox" checked={s.on} onChange={(ev) => setStories(stories.map((x, j) => (j === i ? { ...x, on: ev.target.checked } : x)))} />
+                      {s.label}{s.date ? <span className="muted small"> · {s.date}</span> : null}
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          <label className="check">
+            <input type="checkbox" checked={fill} disabled={!candidates().length} onChange={(e) => setFill(e.target.checked)} />
+            Add earlier editions until the booklet reaches about {target} pages
+          </label>
           <div className="actions">
             <button className="primary" disabled={!chosen} onClick={make}>Make the booklet</button>
-            <span className="muted small">{chosen} stories, about {Math.ceil((chosen * (3 + 3 * Math.min(1, data.settings.book.max_images_per_article))) / 60)} min at a polite pace. You can leave this page.</span>
+            <span className="muted small">{chosen} stories to start, a few seconds each. You can leave this page.</span>
           </div>
         </div>
       )}

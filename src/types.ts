@@ -14,6 +14,8 @@ export interface BookConfig {
   printer: string;
   /** Place line for house C's cover foot, e.g. "Catalunya". */
   place: string;
+  /** Pages a booklet aims for when Desk adds earlier editions to fill it. */
+  target_pages: number;
 }
 
 export interface Settings {
@@ -47,6 +49,13 @@ export interface Publication extends Skin {
   updatedAt: string;
 }
 
+export interface EditionRef {
+  label: string;
+  url: string;
+  /** yyyy-mm, for a month edition. */
+  month?: string;
+}
+
 export interface Issue {
   /** Folder-style id, YYYY-MM. Sorting by id gives the issue number. */
   id: string;
@@ -58,7 +67,15 @@ export interface Issue {
   subtitle: string;
   printedAt?: string;
   /** The edition this issue reproduces, when it was built from one. */
-  source?: { domain: string; publication: string; edition: string; url: string };
+  source?: {
+    domain: string;
+    publication: string;
+    /** The edition, or the editions together: "Issue Ninety-Three", "July–September 2026". */
+    edition: string;
+    url: string;
+    /** When the booklet holds several editions, each one, oldest first. */
+    editions?: EditionRef[];
+  };
   createdAt: string;
   updatedAt: string;
 }

@@ -225,6 +225,6 @@ export function runQa({ pages, source, articles }: QaInput): QaItem[] {
     });
   }
 
-  if (pages.length > 48) items.push({ level: 'warn', check: 'length', message: `${pages.length} pages. Above 48 a long-reach stapler struggles; consider splitting the issue.` });
+  if (pages.length > 64) items.push({ level: 'warn', check: 'length', message: `${pages.length} pages. Above 64 (16 folded sheets) a home long-reach stapler struggles; consider two booklets.` });
   return items;
 }

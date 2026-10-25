@@ -119,7 +119,7 @@ function lateShortTakes(pages: HTMLElement[]): Set<string> {
   for (const p of pages) {
     const area = p.querySelector('.pagedjs_page_content')?.getBoundingClientRect();
     if (!area) continue;
-    p.querySelectorAll<HTMLElement>('.article.short:not(.first-short)').forEach((a) => {
+    p.querySelectorAll<HTMLElement>('.article.short:not(.first-short):not(.after-opener)').forEach((a) => {
       const head = a.querySelector('.short-head');
       if (!head) return;
       const top = head.getBoundingClientRect().top - area.top;
@@ -134,7 +134,7 @@ function markPages(pages: HTMLElement[], house: HouseStyle, coverColour: string)
     p.classList.add(HOUSE_SHORT[house]);
     // On screen the cover page shows the card's colour edge to edge.
     if (p.querySelector('.cover')) p.style.setProperty('--card', coverColour);
-    if (p.querySelector('.article:not(.short) .article-head, .short-takes-opener')) p.classList.add('opener');
+    if (p.querySelector('.article:not(.short) .article-head, .short-takes-opener, .edition-opener')) p.classList.add('opener');
     if (p.querySelector('.pad')) p.classList.add('pad-page');
   }
 }

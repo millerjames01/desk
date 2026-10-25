@@ -77,6 +77,7 @@ export default function SettingsPage({ data }: { data: Data }) {
           <label>Title<input value={s.book.title} onChange={(e) => book({ title: e.target.value })} /></label>
           <label>Tagline<input value={s.book.tagline} onChange={(e) => book({ tagline: e.target.value })} /></label>
           <label>Images per article, at most<input type="number" min={0} max={10} value={s.book.max_images_per_article} onChange={(e) => book({ max_images_per_article: Number(e.target.value) })} /></label>
+          <label>Fill a booklet to about, pages<input type="number" min={16} max={96} step={4} value={s.book.target_pages} onChange={(e) => book({ target_pages: Number(e.target.value) })} /></label>
           <label>Creep, mm per sheet<input type="number" step={0.05} value={s.book.creep_mm_per_sheet} onChange={(e) => book({ creep_mm_per_sheet: Number(e.target.value) })} /></label>
           <label>
             Pad to a multiple of 4 with
