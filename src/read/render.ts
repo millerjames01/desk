@@ -350,7 +350,7 @@ export function renderIssue(i: RenderInput): Rendered {
       .join('\n');
   }
   const html = `<div class="book house-${house}${i.config.recto_starts ? ' recto-starts' : ''}">
-${cover(i, issueLabel).replace('<div class="cover-top">', `<div class="cover-top"><span class="rh-issue">${esc(issueLabel.mark)}</span>`)}
+${cover({ ...i, articles: ordered }, issueLabel).replace('<div class="cover-top">', `<div class="cover-top"><span class="rh-issue">${esc(issueLabel.mark)}</span>`)}
 ${contents({ ...i, articles: ordered })}
 ${articles}
 ${pads}
