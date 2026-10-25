@@ -26,13 +26,30 @@
 }
 .cover-b .cover-top { display: flex; justify-content: space-between; font-size: 8.25pt; letter-spacing: 0.1em; text-transform: uppercase; }
 .cover-b .cover-top span:nth-child(2) { font-weight: 500; }
-/* A range of editions ("07–09") at a size that fits the width. */
-.cover-b .cover-num.long { font-size: 112pt; letter-spacing: -0.04em; margin-left: -1mm; }
 .cover-b .cover-num { flex: 1; display: flex; align-items: center; font-size: 225pt; font-weight: 500; line-height: 0.8; letter-spacing: -0.05em; margin-left: -2.6mm; }
 .cover-b .cover-list { border-top: 1.5pt solid #111418; padding-top: 3.7mm; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 4mm; row-gap: 3.2mm; }
 .cover-b .toc-link { display: block; font-family: var(--serif); font-size: 11.25pt; line-height: 1.3; }
 .cover-b .toc-link::before { content: target-counter(attr(href), page, decimal-leading-zero); display: block; font-family: var(--sans); font-size: 7.5pt; letter-spacing: 0.1em; }
 .cover-b .toc-link::after { content: none; }
+
+/* A booklet of one journal: the year strip, the journal's mark above its name.
+   Nothing grows and nothing is pushed to the foot: when the cover's content
+   fills it to the last millimetre, Paged.js carries the last line onto a
+   second page. Auto margins above the name and below the address leave slack. */
+.cover-b.cover-edition .cover-top { display: block; padding-top: 18mm; margin-bottom: 34mm; }
+.cover-strip { display: flex; border: 0.75pt solid #111418; }
+.cover-strip span { flex: 1; text-align: center; font-size: 7pt; font-weight: 500; letter-spacing: 0; padding: 2.2mm 0; border-left: 0.75pt solid #111418; }
+.cover-strip span:first-child { border-left: 0; }
+.cover-strip span.on { background: #111418; color: var(--cover); }
+/* On the card, the letters are bare card: no ink. */
+.print .cover-strip span.on { color: #fff; }
+.cover-edition .cover-name { margin-top: auto; }
+.cover-mark { display: block; height: 20mm; width: auto; max-width: 70mm; margin-bottom: 6mm; }
+.cover-edition .cover-pub { margin: 0; font-family: var(--serif); font-size: 32pt; font-weight: 600; line-height: 1.05; letter-spacing: -0.01em; }
+.cover-edition .cover-run { margin: 3mm 0 0; font-family: var(--serif); font-size: 15pt; }
+.cover-edition .cover-meta { margin: 5mm 0 auto; padding-top: 2.5mm; border-top: 0.75pt solid #111418; font-size: 8.5pt; }
+.cover-edition .cover-facts { display: flex; justify-content: space-between; }
+.cover-edition .cover-foot { margin-top: 44mm; text-align: right; letter-spacing: 0.04em; }
 
 /* Contents */
 .house-b-grid .contents-title { font-family: var(--sans); font-size: 7.5pt; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0 0 24mm; }

@@ -7,7 +7,7 @@
 import MarkdownIt from 'markdown-it';
 import footnote from 'markdown-it-footnote';
 import type { Article, BookConfig, Issue, Publication } from '../types';
-import { COVER_DEFAULTS, editionNumber, issueDate, labels } from './issue';
+import { COVER_DEFAULTS, editionNumber, editionStrip, issueDate, labels } from './issue';
 import { kickerText, resolveSkin } from './skins';
 
 export interface RenderInput {
@@ -22,6 +22,8 @@ export interface RenderInput {
   pad: number;
   /** Short Takes that start a page because too little was left on the last one. */
   breakBefore?: Set<string>;
+  /** The journal's mark in black, for the Grid cover. */
+  markUrl?: string;
 }
 
 /** Long reads first, then Short Takes, each group in issue order. */
@@ -175,6 +177,28 @@ function boldLead(p: Element): void {
   p.insertBefore(span, t);
 }
 
+/**
+ * Grid's cover for a booklet of one journal: the year (or the run of issues)
+ * as a strip with the gathered editions filled, the journal's mark on the
+ * left edge above its name, the editions, and the journal's address.
+ */
+function editionCoverB(i: RenderInput): string {
+  const src = i.issue.source!;
+  const strip = editionStrip(src, i.issue.id);
+  const cells = strip ? `<div class="cover-strip${strip.length === 12 ? '' : ' issues'}">${strip.map((c) => `<span${c.on ? ' class="on"' : ''}>${esc(c.label)}</span>`).join('')}</div>` : '';
+  const year = String(issueDate(i.issue.id).year);
+  const run = /\b\d{4}\b/.test(src.edition) ? src.edition : `${src.edition} · ${year}`;
+  const n = i.articles.length;
+  const eds = editionGroups(i.issue, i.articles)?.length ?? 1;
+  const kind = strip && strip.length === 12 ? 'edition' : 'issue';
+  const minutes = i.articles.reduce((m, a) => m + a.read_minutes, 0);
+  return `<section class="cover cover-b cover-edition">
+  <div class="cover-top">${cells}</div>
+  <div class="cover-name">${i.markUrl ? `<img class="cover-mark" src="${esc(i.markUrl)}" alt="">` : ''}<h1 class="cover-pub">${esc(src.publication)}</h1><p class="cover-run">${esc(run)}</p></div>
+  <div class="cover-meta"><div class="cover-facts"><span>${n} piece${n === 1 ? '' : 's'}${eds > 1 ? ` · ${eds} ${kind}s` : ''}</span><span>about ${minutes} minutes</span></div><div class="cover-foot">${esc(src.domain)}</div></div>
+</section>`;
+}
+
 function cover(i: RenderInput, issueLabel: ReturnType<typeof labels>): string {
   const { config: c, issue, articles } = i;
   const date = issueDate(issue.id);
@@ -187,9 +211,10 @@ function cover(i: RenderInput, issueLabel: ReturnType<typeof labels>): string {
   <div class="cover-list"><div class="cover-label">In this issue</div><ul>${list}</ul></div>
 </section>`;
     case 'b-grid':
+      if (issue.source) return editionCoverB(i);
       return `<section class="cover cover-b">
-  <div class="cover-top"><span>${esc(c.title)}</span><span>${esc(issue.source ? `${issue.source.publication} · ${issue.source.edition}` : date.short)}</span></div>
-  <div class="cover-num${issueLabel.numberLabel.length > 2 ? ' long' : ''}">${esc(issueLabel.numberLabel)}</div>
+  <div class="cover-top"><span>${esc(c.title)}</span><span>${esc(date.short)}</span></div>
+  <div class="cover-num">${esc(issueLabel.numberLabel)}</div>
   <ul class="cover-list">${list}</ul>
 </section>`;
     case 'c-pamphlet':

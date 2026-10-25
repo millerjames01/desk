@@ -63,8 +63,27 @@ export interface SiteProfile {
   storyPath: string;
   skipPath?: string[];
   story: StoryRules;
+  /** The journal's own mark, printed in black on the Grid cover. */
+  mark?: Mark;
   notes?: string;
 }
+
+/**
+ * A logo or favicon, fetched once through the transport and turned to black
+ * ink. `ink` says what becomes ink: every opaque pixel (shape), the dark parts
+ * of a mark on white (dark), or the bright parts of a mark on black (light).
+ * `crop` keeps a part of it, as fractions [x, y, width, height].
+ */
+export interface Mark {
+  url?: string;
+  /** Inline SVG instead of a URL. */
+  svg?: string;
+  ink?: 'shape' | 'dark' | 'light';
+  crop?: [number, number, number, number];
+}
+
+/** Lost Balloon has no logo of its own; this balloon is Desk's stand-in. */
+const BALLOON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 80" width="200" height="400" fill="none" stroke="#111" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4C10.5 4 4.5 11.5 4.5 20.5 4.5 31 13 40 19 43.5h2C27 40 35.5 31 35.5 20.5 35.5 11.5 29.5 4 20 4Z"/><path d="M11 14.5c1.6-3.8 4.8-5.8 8-6.2"/><path d="M18 43.5 16.8 47h6.4L22 43.5"/><path d="M20 47c-3 5 3 9 0 14s3 9 0 15"/></svg>';
 
 export const DEFAULT_PROFILES: SiteProfile[] = [
   {
@@ -80,6 +99,7 @@ export const DEFAULT_PROFILES: SiteProfile[] = [
       body: { select: '.entry-content', until: 'h3@About the Author' },
       strip: ['audio', '.audiointro', '.fimage', '.sharedaddy', '.addtoany_share_save_container'],
     },
+    mark: { url: 'https://www.smokelong.com/wp-content/uploads/2021/02/logofoot-1.svg', ink: 'shape', crop: [0, 0, 1, 0.69] },
     notes: 'Issue pages list about twelve stories and the editor’s letter, which is skipped.',
   },
   {
@@ -94,6 +114,7 @@ export const DEFAULT_PROFILES: SiteProfile[] = [
       author: { select: 'h4', stripPrefix: 'By ' },
       body: { select: 'main, article, #page', between: ['hr', 'hr'] },
     },
+    mark: { url: 'https://images.squarespace-cdn.com/content/v1/65a7291110083f33f632f3bf/e005d7cf-8b66-4c2d-bbb8-57cfd7765a34/LOGO_vector.png?format=500w', ink: 'shape' },
     notes: 'Squarespace: story URLs look like any page, so the list comes from the issue page. Dates come from the issue.',
   },
   {
@@ -109,7 +130,8 @@ export const DEFAULT_PROFILES: SiteProfile[] = [
       strip: ['.sharedaddy', '.jp-relatedposts', '#jp-post-flair', '.wpcnt', '.wp-block-jetpack-subscriptions'],
       category: 'a[rel~="category"]',
     },
-    notes: 'Weekly posts, so an edition is a month.',
+    mark: { svg: BALLOON, ink: 'shape' },
+    notes: 'Weekly posts, so an edition is a month. No logo of its own: the balloon mark is a stand-in.',
   },
   {
     domain: 'havehashad.com',
@@ -118,6 +140,7 @@ export const DEFAULT_PROFILES: SiteProfile[] = [
     edition: { kind: 'month', archive: 'https://www.havehashad.com/hadposts/archives', next: 'a[rel="next"]', item: '.story', itemLink: 'h1.title a', itemDate: '.date' },
     storyPath: '^/hadposts/(?!archives|random|author)[^/]+$',
     story: { title: 'h1.title', author: { select: 'h2.author' }, date: { select: 'h3.date' }, body: { select: '.story-content' } },
+    mark: { url: 'https://havehashad.com/apple-touch-icon.png', ink: 'dark' },
     notes: 'A piece a day; an edition is a month, read from the archive’s dates.',
   },
   {
@@ -127,6 +150,7 @@ export const DEFAULT_PROFILES: SiteProfile[] = [
     edition: { kind: 'month', archive: 'https://xraylitmag.com/{yyyy}/{mm}/', next: '.nav-previous a, a.next' },
     storyPath: '^/[^/]+-by-[^/]+/[^/]+/?$',
     story: { titleAuthor: { select: 'h1.entry-title', splitLast: ' by ' }, body: { select: '.entry-content', bioAfterLast: '.wp-block-spacer' } },
+    mark: { url: 'https://xraylitmag.com/wp-content/uploads/2021/03/xray-header-transparent-3.png', ink: 'light' },
     notes: 'A few long pieces a month. Experimental forms: spacing is kept.',
   },
 ];

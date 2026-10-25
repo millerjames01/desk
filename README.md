@@ -30,7 +30,9 @@ A booklet is one journal, never a mix: SmokeLong's Issue Ninety-Three, HAD's Oct
 4. **Make the booklet.** Desk fetches the stories one at a time, a few seconds apart, into a new issue titled with the journal and edition (or the run of them: "July–September 2026", "Issues 92–93"). You can leave the page; a closed tab resumes with **Carry on**.
 5. Typeset, check, print.
 
-A booklet of several editions reads oldest first. Each edition opens with a half-title, the contents are grouped by edition, Short Takes stay with their own edition, and the cover carries the range ("07–09" in Grid).
+A booklet of several editions reads oldest first. Each edition opens with a half-title, the contents are grouped by edition, and Short Takes stay with their own edition.
+
+In Grid, a journal's booklet has its own cover: a strip of the year's months (or a run of issue numbers) with the gathered ones filled in, the journal's mark on the left edge above its name, the editions and year, and the journal's address. The mark is the journal's logo or favicon, named in its profile (`mark` in `src/read/sites.ts`). The walk fetches it once, through the extension or proxies like any other request, and Desk turns it to black ink for the card. Lost Balloon has no logo, so its profile carries a balloon drawn as a stand-in. Review and Pamphlet keep their covers, with the range in the issue line.
 
 | Journal | A booklet is usually |
 |---|---|

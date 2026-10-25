@@ -9,6 +9,7 @@ import type { Article, EditionRef, Issue, Settings } from '../types';
 import { editionsLabel } from './issue';
 import { loadProfiles } from './profiles';
 import { addFromHtml, DuplicateError } from './articles';
+import { ensureMark } from './mark';
 import { cleanTitle, meta, parseHtml } from './extract';
 import { editionStories, issueEditions, monthEditions, profileFor, type Edition, type SiteProfile, type StoryLink } from './sites';
 import { normalize, slugify } from './text';
@@ -106,6 +107,8 @@ export async function walk(issueId: string, settings: Settings, t: Transport, on
   const progress: WalkProgress = { done: 0, total: left.length, failed: [] };
   const walked = new Set((await kvGet<string[]>(`walked:${issueId}`)) ?? []);
   const notes: string[] = [];
+  const p = issue?.source ? profileFor(issue.source.url, await loadProfiles()) : undefined;
+  if (p && !signal?.aborted) await ensureMark(p, t);
   while (!signal?.aborted) {
     if (!left.length) {
       const next = await nextEdition(issueId, t);

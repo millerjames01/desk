@@ -138,3 +138,33 @@ export function nextIssueId(issues: Pick<Issue, 'id'>[], from = new Date()): str
   for (const suffix of 'bcdefghij') if (!taken.has(base + suffix)) return base + suffix;
   return `${base}-${Date.now()}`;
 }
+
+export interface StripCell {
+  label: string;
+  on: boolean;
+}
+
+/**
+ * The Grid cover's strip: the twelve months with the gathered ones filled,
+ * or a run of issue numbers around the gathered issues. Undefined when the
+ * editions are neither months nor numbered.
+ */
+export function editionStrip(source: NonNullable<Issue['source']>, issueId: string): StripCell[] | undefined {
+  const ed = editionNumber(source, issueId);
+  if (!ed) return undefined;
+  const eds = source.editions && source.editions.length > 1 ? source.editions : undefined;
+  if (ed.month) {
+    const on = new Set<number>();
+    if (eds?.[0].month && eds[eds.length - 1].month) {
+      const [fy, fm] = eds[0].month.split('-').map(Number);
+      const [ly, lm] = eds[eds.length - 1].month!.split('-').map(Number);
+      for (let k = fy * 12 + fm - 1; k <= ly * 12 + lm - 1 && on.size < 12; k++) on.add((k % 12) + 1);
+    } else on.add(ed.number);
+    return MONTHS.map((m, i) => ({ label: m[0], on: on.has(i + 1) }));
+  }
+  const first = eds ? Number(ed.range!.split('–')[0]) : ed.number;
+  const last = ed.number;
+  const span = Math.min(last - first + 1, 8);
+  const start = Math.max(1, Math.min(first - Math.ceil((8 - span) / 2), last + 1 - 7));
+  return Array.from({ length: 8 }, (_, i) => start + i).map((n) => ({ label: String(n), on: n >= first && n <= last }));
+}

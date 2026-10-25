@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { editionNumber, editionsLabel, labels } from '../src/read/issue';
+import { editionNumber, editionsLabel, editionStrip, labels } from '../src/read/issue';
+import { inkOf, sizedSvg } from '../src/read/mark';
+import { runQa } from '../src/read/qa';
 import { editionGroups } from '../src/read/render';
 import { estimatePages } from '../src/read/walk';
 import type { Article, Issue } from '../src/types';
@@ -45,5 +47,39 @@ describe('several editions in one booklet', () => {
     expect(estimatePages([])).toBe(4);
     expect(estimatePages([{ words: 2100, shortTake: false, excluded: false }, { words: 2100, shortTake: false, excluded: true }])).toBe(15);
     expect(estimatePages([{ words: 420, shortTake: true, excluded: false }], 3)).toBe(8);
+  });
+
+  it('fills the gathered months or issues on the cover strip', () => {
+    const lb = { domain: 'lost-balloon.com', publication: 'Lost Balloon', edition: 'July–September 2026', url: '', editions: months };
+    const strip = editionStrip(lb, '2026-10-lb')!;
+    expect(strip.map((c) => c.label).join('')).toBe('JFMAMJJASOND');
+    expect(strip.filter((c) => c.on).map((_, i) => i)).toHaveLength(3);
+    expect(strip.findIndex((c) => c.on)).toBe(6);
+    const one = editionStrip({ ...lb, edition: 'October 2026', editions: undefined }, 'x')!;
+    expect(one.findIndex((c) => c.on)).toBe(9);
+    const winter = editionStrip({ ...lb, edition: 'December 2025–January 2026', editions: [{ label: 'December 2025', url: '', month: '2025-12' }, { label: 'January 2026', url: '', month: '2026-01' }] }, 'x')!;
+    expect(winter.filter((c) => c.on).map((c) => c.label)).toEqual(['J', 'D']);
+    const sl = editionStrip({ domain: 's', publication: 'SmokeLong Quarterly', edition: 'Issues 92–93', url: '', editions: [{ label: 'Issue 92', url: '' }, { label: 'Issue 93', url: '' }] }, 'x')!;
+    expect(sl.map((c) => c.label)).toEqual(['87', '88', '89', '90', '91', '92', '93', '94']);
+    expect(sl.filter((c) => c.on).map((c) => c.label)).toEqual(['92', '93']);
+    expect(editionStrip({ domain: 's', publication: 'S', edition: 'Issue 3', url: '' }, 'x')!.map((c) => c.label)).toEqual(['1', '2', '3', '4', '5', '6', '7', '8']);
+    expect(editionStrip({ domain: 's', publication: 'S', edition: 'The Winter One', url: '' }, 'undated')).toBeUndefined();
+  });
+
+  it('turns a mark to black ink', () => {
+    expect(inkOf(200, 40, 30, 255, 'shape')).toBe(255);
+    expect(inkOf(255, 255, 255, 255, 'dark')).toBe(0);
+    expect(inkOf(0, 0, 0, 255, 'dark')).toBe(255);
+    expect(inkOf(255, 255, 255, 128, 'light')).toBe(128);
+    expect(sizedSvg('<svg viewBox="0 0 156 133"><path/></svg>')).toBe('<svg width="600" height="512" viewBox="0 0 156 133"><path/></svg>');
+    expect(sizedSvg('<svg width="10" viewBox="0 0 1 1"/>')).toBe('<svg width="10" viewBox="0 0 1 1"/>');
+  });
+
+  it('fails QA when the cover runs onto a second page', () => {
+    const page = () => Object.assign(document.createElement('div'), { innerHTML: '<div class="pagedjs_page_content"><section class="cover">x</section></div>' });
+    const pages = [page(), page()];
+    pages.forEach((p, i) => (p.dataset.pageNumber = String(i + 1)));
+    const items = runQa({ pages, source: document.createElement('div'), articles: [] } as unknown as Parameters<typeof runQa>[0]);
+    expect(items).toContainEqual(expect.objectContaining({ level: 'error', page: 2, message: 'The cover runs onto a second page.' }));
   });
 });

@@ -29,6 +29,7 @@ import { all, get, kvSet, now } from '../db';
 import { loadSettings } from '../settings';
 import { COVER_DEFAULTS, issueNumber } from '../read/issue';
 import { renderIssue } from '../read/render';
+import { markId } from '../read/mark';
 import { runQa, type QaReport } from '../read/qa';
 import { creep, padCount, sidesFor, type Layout } from '../read/impose';
 import type { Article, HouseStyle, Publication } from '../types';
@@ -84,7 +85,9 @@ async function load() {
     }
   }
   const pubs = new Map<string, Publication>(pubList.map((p) => [p.domain, p]));
-  return { settings, issue, articles: ordered, number: issueNumber(issue.id, issues), pubs, urls };
+  const mark = issue.source ? await get('blobs', markId(issue.source.domain)) : undefined;
+  const markUrl = mark?.blob ? URL.createObjectURL(mark.blob) : undefined;
+  return { settings, issue, articles: ordered, number: issueNumber(issue.id, issues), pubs, urls, markUrl };
 }
 
 function clearPaged(): void {
@@ -232,7 +235,7 @@ const TIPS: Record<string, string> = {
   booklet: 'Print on A4 landscape, two-sided, flip on short edge. Margins: none, scale 100%. Sheet 1 is the cover card.',
   fronts: 'Manual duplex, step 1: print these, then put the stack back in the tray printed side down, top edge first.',
   backs: 'Manual duplex, step 2: these run in reverse so the stack goes straight back in.',
-  cover: 'The cover card alone, both sides, for the manual-feed slot. Check the card weight against the printer.',
+  cover: 'The cover card alone, both sides. Feed the card a few sheets at a time with the printer set for thick paper, and check its weight against the printer.',
   interior: 'Every sheet inside the cover, two-sided, flip on short edge.',
   sheet: 'Every page at a glance. Look for odd breaks, stranded heads and empty pages.',
 };
@@ -240,7 +243,7 @@ const TIPS: Record<string, string> = {
 async function main(): Promise<void> {
   say('Loading issue…');
   const data = await load();
-  const { settings, issue, articles, number, pubs, urls } = data;
+  const { settings, issue, articles, number, pubs, urls, markUrl } = data;
   const config = settings.book;
   document.title = `${config.title} ${issue.id}`;
   document.documentElement.classList.toggle('print', layout !== 'reading' && layout !== 'sheet');
@@ -251,7 +254,7 @@ async function main(): Promise<void> {
   await Promise.all(FONTS.map((f) => document.fonts.load(f).catch(() => [])));
 
   const css = [baseCss, HOUSE_CSS[config.house_style]].join('\n');
-  const input = { issue, number, articles, config, pubs, imageUrl: (id: string) => urls.get(id), pad: 0 };
+  const input = { issue, number, articles, config, pubs, imageUrl: (id: string) => urls.get(id), pad: 0, markUrl };
 
   say('Typesetting…');
   let out = renderIssue(input);

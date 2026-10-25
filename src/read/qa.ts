@@ -160,6 +160,10 @@ export function runQa({ pages, source, articles }: QaInput): QaItem[] {
     }
   });
 
+  // ---------- The cover is one page (hard) ----------
+  const coverPages = pages.filter((p) => p.querySelector('.cover'));
+  if (coverPages.length > 1) items.push({ level: 'error', check: 'overflow', page: Number(coverPages[1].dataset.pageNumber), message: 'The cover runs onto a second page.' });
+
   for (const page of pages) {
     const num = Number(page.dataset.pageNumber);
     const area = page.querySelector('.pagedjs_page_content') as HTMLElement | null;

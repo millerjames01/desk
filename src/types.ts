@@ -120,7 +120,7 @@ export interface Article {
 /** Binary or bulky things that never leave the device (not in backups). */
 export interface BlobRecord {
   id: string;
-  kind: 'image' | 'page-photo' | 'raw-html';
+  kind: 'image' | 'page-photo' | 'raw-html' | 'mark';
   blob?: Blob;
   text?: string;
   width?: number;
