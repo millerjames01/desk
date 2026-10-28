@@ -6,6 +6,7 @@
 
 import { get, kvGet, now, put, today } from '../db';
 import type { Article, Issue } from '../types';
+import { markId } from './mark';
 import { countWords, readMinutes } from './text';
 
 export const SAMPLE_ISSUE = 'sample';
@@ -107,9 +108,20 @@ function article(id: string, fields: Partial<Article> & { markdown: string }): A
   };
 }
 
-/** Writes the sample issue (once) and returns its id. */
+/** Bumped when the sample changes, so an installed copy is rewritten. */
+const SAMPLE_VERSION = 2;
+
+/** The sample journal's mark: a leaf, drawn for Desk, already in black. */
+const LEAF = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="400" height="400" fill="none" stroke="#111" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 32C8 16 18 7 34 6c-1 16-10 26-26 26Z"/><path d="M8 32 26 14"/><path d="M15 25h7M19 21v-6"/></svg>';
+
+/**
+ * Writes the sample issue (once) and returns its id. It is a booklet of two
+ * editions of an imaginary journal, so it shows the edition cover, the
+ * half-titles and the grouped contents.
+ */
 export async function installSample(): Promise<string> {
-  if ((await get('issues', SAMPLE_ISSUE)) && (await kvGet('sample:v'))) return SAMPLE_ISSUE;
+  if ((await get('issues', SAMPLE_ISSUE)) && (await kvGet('sample:v')) === SAMPLE_VERSION) return SAMPLE_ISSUE;
+  await put('blobs', { id: markId('sample.desk'), kind: 'mark', blob: new Blob([LEAF], { type: 'image/svg+xml' }), createdAt: now() });
   await put('blobs', { id: 'sample-hedge', kind: 'image', blob: await sampleImage(), width: 1400, height: 860, createdAt: now() });
   const a = article('sample-hedgerow', {
     title: 'The Slow Return of the Hedgerow',
@@ -119,7 +131,7 @@ export async function installSample(): Promise<string> {
     domain: 'sample.desk',
     url: 'https://example.org/hedgerow',
     published: '2026-10-12',
-    section: 'Nature',
+    section: 'October 2026',
     images: ['sample-hedge'],
     markdown: HEDGEROW,
   });
@@ -127,17 +139,25 @@ export async function installSample(): Promise<string> {
     title: 'A Short History of the Index Card',
     dek: 'Three inches by five, one idea to a card, and a habit of thought that outlived the library catalogue.',
     author: 'B. Sample',
-    publication: 'Second Sample',
-    domain: 'second.sample',
+    publication: 'Desk Sample',
+    domain: 'sample.desk',
     url: 'https://example.org/index-card',
     published: '2026-09-30',
-    section: 'Tools',
+    section: 'September 2026',
     markdown: INDEX_CARD,
   });
   await put('articles', a);
   await put('articles', b);
-  const issue: Issue = { id: SAMPLE_ISSUE, order: [a.id, b.id], coverColour: '', subtitle: 'two essays for the autumn', createdAt: now(), updatedAt: now() };
+  const editions = [
+    { label: 'September 2026', url: 'https://example.org/2026/09/', month: '2026-09' },
+    { label: 'October 2026', url: 'https://example.org/2026/10/', month: '2026-10' },
+  ];
+  const issue: Issue = {
+    id: SAMPLE_ISSUE, order: [b.id, a.id], coverColour: '', subtitle: 'Desk Sample · September–October 2026',
+    source: { domain: 'sample.desk', publication: 'Desk Sample', edition: 'September–October 2026', url: 'https://example.org/2026/10/', editions },
+    createdAt: now(), updatedAt: now(),
+  };
   await put('issues', issue);
-  await put('kv', { key: 'sample:v', value: 1 });
+  await put('kv', { key: 'sample:v', value: SAMPLE_VERSION });
   return SAMPLE_ISSUE;
 }

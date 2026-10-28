@@ -51,6 +51,7 @@ body { background: #8a8d91; font: 13px/1.4 system-ui, sans-serif; }
 .contact .pagedjs_page { transform: scale(0.25); transform-origin: top left; }
 
 @media print {
+  #pages { zoom: 1 !important; }
   #bar, #status { display: none !important; }
   body { background: none; }
   .sheet { box-shadow: none; }

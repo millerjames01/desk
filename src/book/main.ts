@@ -299,7 +299,23 @@ async function main(): Promise<void> {
   toolbar(pages.length, report);
   say('');
   status.remove();
+  fitToScreen();
+  addEventListener('resize', fitToScreen);
   if (autoPrint) setTimeout(() => window.print(), 300);
+}
+
+/**
+ * On a screen narrower than a page (a phone), shrink the preview to fit
+ * rather than cut it off. Only after QA has measured the pages, and never
+ * in print: book.css resets the zoom there.
+ */
+function fitToScreen(): void {
+  pagesEl.style.zoom = '';
+  const first = pagesEl.querySelector<HTMLElement>('.sheet, .contact, .pagedjs_page');
+  if (!first) return;
+  const natural = first.classList.contains('contact') ? first.scrollWidth : first.getBoundingClientRect().width;
+  const room = document.documentElement.clientWidth - 16;
+  if (natural > room) pagesEl.style.zoom = String(room / natural);
 }
 
 main().catch((e) => {

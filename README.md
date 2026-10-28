@@ -178,6 +178,6 @@ npm run build      # typecheck + build to dist/
 - `src/pages/`: the React views
 - `src/db.ts`: IndexedDB; every write notifies this tab and other Desk tabs
 
-Read → **Try the sample issue** renders two placeholder essays in the chosen house style, which is the quickest way to check a template change.
+Read → **Try the sample issue** renders two placeholder essays as a booklet of two editions (September and October) of an imaginary journal, Desk Sample, in the chosen house style. It shows the edition cover, the half-titles and the grouped contents, and is the quickest way to check a template change.
 
 `.github/workflows/deploy.yml` tests, builds with the Pages base path and publishes on every push to `main`; `checks.yml` runs the same on pull requests.
