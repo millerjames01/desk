@@ -32,6 +32,15 @@ const SKIP = '.fn, .fn-ref, .end-mark, .fn-mark';
 function textOf(el: Element): string {
   const c = el.cloneNode(true) as Element;
   c.querySelectorAll(SKIP).forEach((x) => x.remove());
+  // When a page breaks inside a hyphenated word, Paged.js ends the first
+  // half with its own hyphen (U+2011) and marks the element: that glyph is
+  // the layout's, not the writer's.
+  for (const h of [c, ...c.querySelectorAll('*')].filter((x) => x.classList.contains('pagedjs_hyphen'))) {
+    const walker = document.createTreeWalker(h, NodeFilter.SHOW_TEXT);
+    let last: Text | null = null;
+    while (walker.nextNode()) last = walker.currentNode as Text;
+    if (last?.data.endsWith('\u2011')) last.data = last.data.slice(0, -1);
+  }
   return c.textContent ?? '';
 }
 

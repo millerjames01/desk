@@ -90,4 +90,20 @@ describe('several editions in one booklet', () => {
     expect(runsOn(piece(600), piece(60))).toBe(false);
     expect(runsOn(piece(60), undefined)).toBe(false);
   });
+
+  it('reads a word split across pages without the layout’s hyphen', () => {
+    const body = (inner: string) => `<div class="article-body" data-article="r">${inner}</div>`;
+    const source = Object.assign(document.createElement('div'), { innerHTML: body('<p>the graves got three words from the county, left undisturbed</p>') });
+    const page = (n: number, inner: string) => {
+      const p = Object.assign(document.createElement('div'), { innerHTML: `<div class="pagedjs_page_content">${body(inner)}</div>` });
+      p.dataset.pageNumber = String(n);
+      return p;
+    };
+    const pages = [page(1, '<p class="pagedjs_hyphen">the graves got three words from the coun\u2011</p>'), page(2, '<p>ty, left undisturbed</p>')];
+    const items = runQa({ pages, source, articles: [{ id: 'r', title: 'Retention', markdown: '' }] } as unknown as Parameters<typeof runQa>[0]);
+    expect(items.filter((i) => i.check === 'integrity')).toEqual([]);
+    // A hyphen the writer typed is still the writer's.
+    const typed = [page(1, '<p>the graves got three words from the coun\u2011</p>'), page(2, '<p>ty, left undisturbed</p>')];
+    expect(runQa({ pages: typed, source, articles: [{ id: 'r', title: 'Retention', markdown: '' }] } as unknown as Parameters<typeof runQa>[0]).some((i) => i.check === 'integrity')).toBe(true);
+  });
 });
