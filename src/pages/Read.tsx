@@ -293,15 +293,32 @@ function ArticleRow({ a, index, count, issue, data }: { a: Article; index: numbe
   );
 }
 
-const LAYOUTS = [
-  ['reading', 'Reading copy (A5)'],
-  ['booklet', 'Booklet (A4, duplex)'],
-  ['fronts', 'Fronts'],
-  ['backs', 'Backs'],
-  ['cover', 'Cover card'],
-  ['interior', 'Interior'],
-  ['sheet', 'Contact sheet'],
-] as const;
+/** Printing a booklet, in the order it is done: the pages, then the cover card. */
+function PrintSteps({ issueId, ok, checked }: { issueId: string; ok: boolean; checked: boolean }) {
+  const link = (layout: string, label: string, primary = false) =>
+    ok ? <a className={`button${primary ? ' primary' : ''}`} href={bookUrl(issueId, layout, '&print=1')} target="_blank" rel="noreferrer">{label}</a> : <button className={primary ? 'primary' : ''} disabled>{label}</button>;
+  return (
+    <div className="print-steps stack">
+      <h4>Print the booklet</h4>
+      {!ok && <p className="muted small">{checked ? 'Fix the errors above and typeset again first.' : 'Typeset and check first.'}</p>}
+      <ol>
+        <li>{link('interior', 'Pages', true)} <span className="muted small">Plain A4, landscape, two-sided, flip on the short edge.</span></li>
+        <li>{link('cover', 'Cover')} <span className="muted small">One sheet of card, two sides: print page 1, put the card back turned over, then print page 2.</span></li>
+        <li><span className="muted small">Fold each sheet, nest them in the cover, staple twice through the fold.</span></li>
+      </ol>
+      <details className="small">
+        <summary>Other ways to print</summary>
+        <p className="actions">
+          {link('booklet', 'Everything at once (cover in the tray first)')}
+          {link('fronts', 'Fronts only')}
+          {link('backs', 'Backs only')}
+          <a className="button" href={bookUrl(issueId, 'sheet')} target="_blank" rel="noreferrer">Contact sheet</a>
+        </p>
+        <p className="muted small">Fronts, then backs: for a printer without two-sided printing.</p>
+      </details>
+    </div>
+  );
+}
 
 export function IssuePage({ data, issueId }: { data: Data; issueId: string }) {
   const issue = data.issues.find((i) => i.id === issueId);
@@ -369,9 +386,7 @@ export function IssuePage({ data, issueId }: { data: Data; issueId: string }) {
         <p className="muted small">House style: {book.house_style.replace('-', ' · ')} (change in Settings). The cover colour is the card you print on; on paper the cover prints in black.</p>
         <div className="actions">
           <button className="primary" disabled={!ready.length} onClick={() => setPreview((n) => n + 1)}>{preview ? 'Typeset again' : 'Typeset and check'}</button>
-          {LAYOUTS.map(([id, label]) => (
-            <a key={id} className="button" href={bookUrl(issue.id, id)} target="_blank" rel="noreferrer">{label}</a>
-          ))}
+          <a className="button" href={bookUrl(issue.id, 'reading')} target="_blank" rel="noreferrer">Reading copy (A5)</a>
         </div>
         {qa ? (
           <div className="qa">
@@ -395,6 +410,7 @@ export function IssuePage({ data, issueId }: { data: Data; issueId: string }) {
         ) : (
           <p className="muted">Not typeset yet.</p>
         )}
+        <PrintSteps issueId={issue.id} ok={!!qa?.ok} checked={!!qa} />
         {preview > 0 && <iframe key={preview} className="book-frame" title="Booklet preview" src={bookUrl(issue.id, 'reading', '&embed=1')} />}
         <div className="actions">
           <button onClick={() => download(`${issue.id}-report.md`, reportMarkdown(issue, data.articles, qa, notes, book.printer), 'text/markdown')}>Download report.md</button>

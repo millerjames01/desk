@@ -232,3 +232,9 @@ input[type='checkbox'], input[type='radio'] { accent-color: var(--accent); }
 /* Buttons used as list rows read left to right. */
 button.plain.grow { align-items: flex-start; }
 .actions select { width: auto; }
+
+.print-steps { border-top: 1px solid var(--line); padding-top: 12px; }
+.print-steps h4 { margin: 0; }
+.print-steps ol { margin: 0; padding-left: 1.2em; display: grid; gap: 8px; }
+.print-steps li > .button, .print-steps li > button { margin-right: 8px; min-width: 6.5em; }
+.print-steps details summary { cursor: pointer; color: var(--muted); }

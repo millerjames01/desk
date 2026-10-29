@@ -72,7 +72,7 @@ The survey listed HAD, X-R-A-Y and Flash Frog as disallowed by `robots.txt`. Che
 
 ### Short Takes
 
-Pieces under 1,000 words are **Short Takes**. They follow the long reads in their own section (with an opener page when there are long reads too), and run one after another rather than a page each. A piece under 250 words is never split across pages. A piece that would begin in the bottom 40% of a page starts the next one instead; a measuring pass finds those. The contents lists Short Takes as a group.
+Pieces under 1,000 words are **Short Takes**. They follow the long reads in their own section (with an opener page when there are long reads too), and, like every piece, each starts a fresh page. The exception is a very short piece (under 250 words, a haiku or a prose poem) straight after another: it follows on the same page, is never split, and starts the next page instead if it would begin in the bottom 40%; a measuring pass finds those. The contents lists Short Takes as a group.
 
 ### Other ways in
 
@@ -97,11 +97,12 @@ The brief for the booklet is in [`design-reference/MARGINALIA-BRIEF.md`](design-
 
 ### Printing
 
-1. Open an issue → **Typeset and check**. Fix anything red.
-2. **Booklet (A4, duplex)** → Print: A4 landscape, two-sided, **flip on short edge**, scale 100 %, margins none.
-   - Sheet 1 is the cover card (160–185 g; check the printer's limit). Use **Cover card** and **Interior** to feed the card separately.
-   - No auto-duplex? Print **Fronts**, put the stack back printed side down, then print **Backs**.
+1. Open an issue → **Typeset and check**. Fix anything red; the list says what and where, here and in the print window.
+2. Under **Print the booklet**: **Pages** on plain A4 (two-sided, flip on the short edge), then **Cover** on one sheet of card, a side at a time.
+
 3. Fold, two staples through the fold, read.
+
+Under *Other ways to print*: **Everything at once** (A4 landscape, two-sided, flip on short edge, scale 100 %, margins none; sheet 1 is the cover card, so load it first), and **Fronts** then **Backs** for a printer without two-sided printing (put the stack back printed side down between them).
 
 On paper the cover prints in black only; the card supplies the colour (set per issue). The interior is greyscale.
 

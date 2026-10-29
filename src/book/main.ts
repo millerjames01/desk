@@ -122,7 +122,7 @@ function lateShortTakes(pages: HTMLElement[]): Set<string> {
   for (const p of pages) {
     const area = p.querySelector('.pagedjs_page_content')?.getBoundingClientRect();
     if (!area) continue;
-    p.querySelectorAll<HTMLElement>('.article.short:not(.first-short):not(.after-opener)').forEach((a) => {
+    p.querySelectorAll<HTMLElement>('.article.short.runs-on').forEach((a) => {
       const head = a.querySelector('.short-head');
       if (!head) return;
       const top = head.getBoundingClientRect().top - area.top;
@@ -228,6 +228,19 @@ function toolbar(total: number, report: QaReport): void {
   tip.className = 'tip';
   tip.textContent = TIPS[layout];
   bar.replaceChildren(sel, print, info, tip);
+  // Say what QA found, not just how much: a blocked booklet should say why.
+  const found = report.items.filter((i) => i.level !== 'note');
+  if (found.length) {
+    const list = document.createElement('ul');
+    list.className = 'qa-list';
+    for (const i of found) {
+      const li = document.createElement('li');
+      li.className = i.level;
+      li.textContent = `${i.level === 'error' ? 'Error' : 'Warning'}${i.page ? ` · p. ${i.page}` : ''}${i.article ? ` · ${i.article}` : ''}: ${i.message}`;
+      list.append(li);
+    }
+    bar.append(list);
+  }
 }
 
 const TIPS: Record<string, string> = {
@@ -235,8 +248,8 @@ const TIPS: Record<string, string> = {
   booklet: 'Print on A4 landscape, two-sided, flip on short edge. Margins: none, scale 100%. Sheet 1 is the cover card.',
   fronts: 'Manual duplex, step 1: print these, then put the stack back in the tray printed side down, top edge first.',
   backs: 'Manual duplex, step 2: these run in reverse so the stack goes straight back in.',
-  cover: 'The cover card alone, both sides. Feed the card a few sheets at a time with the printer set for thick paper, and check its weight against the printer.',
-  interior: 'Every sheet inside the cover, two-sided, flip on short edge.',
+  cover: 'The cover card: two sides. Card won’t go through two-sided printing, so print page 1 only, put the card back in the tray turned over, then print page 2.',
+  interior: 'Every sheet inside the cover: plain A4, landscape, two-sided, flip on short edge, scale 100%, margins none.',
   sheet: 'Every page at a glance. Look for odd breaks, stranded heads and empty pages.',
 };
 

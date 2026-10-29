@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { editionNumber, editionsLabel, editionStrip, labels } from '../src/read/issue';
 import { inkOf, sizedSvg } from '../src/read/mark';
 import { runQa } from '../src/read/qa';
-import { editionGroups } from '../src/read/render';
+import { editionGroups, runsOn } from '../src/read/render';
 import { estimatePages } from '../src/read/walk';
 import type { Article, Issue } from '../src/types';
 
@@ -81,5 +81,13 @@ describe('several editions in one booklet', () => {
     pages.forEach((p, i) => (p.dataset.pageNumber = String(i + 1)));
     const items = runQa({ pages, source: document.createElement('div'), articles: [] } as unknown as Parameters<typeof runQa>[0]);
     expect(items).toContainEqual(expect.objectContaining({ level: 'error', page: 2, message: 'The cover runs onto a second page.' }));
+  });
+
+  it('starts every piece on a page, except a very short one after another', () => {
+    const piece = (words: number) => ({ words, shortTake: words < 1000 }) as Article;
+    expect(runsOn(piece(60), piece(40))).toBe(true);
+    expect(runsOn(piece(60), piece(600))).toBe(false);
+    expect(runsOn(piece(600), piece(60))).toBe(false);
+    expect(runsOn(piece(60), undefined)).toBe(false);
   });
 });

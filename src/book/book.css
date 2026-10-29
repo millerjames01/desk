@@ -13,6 +13,9 @@ body { background: #8a8d91; font: 13px/1.4 system-ui, sans-serif; }
 #bar .ok { color: #9fd3a8; }
 #bar .bad, #status.bad { color: #ff9b8a; }
 #bar .tip { color: #aaa; flex-basis: 100%; }
+#bar .qa-list { flex-basis: 100%; margin: 0; padding-left: 1.2em; }
+#bar .qa-list .error { color: #ff9b8a; }
+#bar .qa-list .warn { color: #e8d39a; }
 #status { padding: 24px; color: #fff; font-size: 15px; }
 
 /* Screen preview: pages on a desk, paper tinted per house. */

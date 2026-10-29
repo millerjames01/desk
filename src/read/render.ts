@@ -51,6 +51,15 @@ export function editionGroups(issue: Issue, articles: Article[]): EditionGroup[]
 /** Under this, a Short Take is never split across pages. */
 export const KEEP_WHOLE_WORDS = 250;
 
+/**
+ * Every piece starts a page, except a very short one (a haiku, a prose poem)
+ * straight after another, which follows on the same page if it fits.
+ */
+export function runsOn(a: Article, prev: Article | undefined): boolean {
+  const tiny = (x: Article | undefined) => !!x && !!x.shortTake && x.words < KEEP_WHOLE_WORDS;
+  return tiny(a) && tiny(prev);
+}
+
 const md = new MarkdownIt({ html: true, typographer: true, linkify: false }).use(footnote);
 // Smart quotes only. The other replacements ((c) → ©, -- → –) would change
 // characters the text-integrity check compares.
@@ -249,7 +258,7 @@ function contents(i: RenderInput): string {
   return `<section class="contents"><h2 class="contents-title">Contents</h2><ol class="toc">${rows}${group}</ol></section>`;
 }
 
-function article(a: Article, n: number, i: RenderInput, vars: string[], firstShort = false, afterOpener = false): string {
+function article(a: Article, n: number, i: RenderInput, vars: string[], runsOn = false, afterOpener = false): string {
   const house = i.config.house_style;
   const skin = resolveSkin(a.domain, i.pubs, a.publication, HOUSE_ORNAMENT[house]);
   const kicker = kickerText(skin.kicker, { section: a.section, read_minutes: a.read_minutes, publication: skin.name });
@@ -259,7 +268,7 @@ function article(a: Article, n: number, i: RenderInput, vars: string[], firstSho
   const opener = skin.opener_variant || '';
   const attrs = [
     `id="${a.id}"`,
-    `class="article art-${n + 1}${a.shortTake ? ` short${a.words < KEEP_WHOLE_WORDS ? ' keep' : ''}${firstShort ? ' first-short' : ''}${i.breakBefore?.has(a.id) ? ' new-page' : ''}` : ''}${afterOpener ? ' after-opener' : ''}"`,
+    `class="article art-${n + 1}${a.shortTake ? ` short${a.words < KEEP_WHOLE_WORDS ? ' keep' : ''}${runsOn ? ' runs-on' : ''}${i.breakBefore?.has(a.id) ? ' new-page' : ''}` : ''}${afterOpener ? ' after-opener' : ''}"`,
     `data-pub="${esc(skin.key)}"`,
     opener ? `data-opener="${opener}"` : '',
     skin.rule ? `data-rule="${skin.rule}"` : '',
@@ -363,7 +372,7 @@ export function renderIssue(i: RenderInput): Rendered {
     ordered = groups.flatMap((g) => g.articles);
     let n = 0;
     articles = groups
-      .map((g) => `<section class="edition-opener"><div class="eo-kicker">${esc(i.issue.source!.publication)}</div><h2>${esc(g.label)}</h2><p>${g.articles.length} piece${g.articles.length === 1 ? '' : 's'}</p></section>\n` + g.articles.map((a, k) => article(a, n++, i, vars, false, k === 0)).join('\n'))
+      .map((g) => `<section class="edition-opener"><div class="eo-kicker">${esc(i.issue.source!.publication)}</div><h2>${esc(g.label)}</h2><p>${g.articles.length} piece${g.articles.length === 1 ? '' : 's'}</p></section>\n` + g.articles.map((a, k) => article(a, n++, i, vars, k > 0 && runsOn(a, g.articles[k - 1]), k === 0)).join('\n'))
       .join('\n');
   } else {
     ordered = readingOrder(i.articles);
@@ -371,7 +380,7 @@ export function renderIssue(i: RenderInput): Rendered {
     const hasLong = ordered.some((a) => !a.shortTake);
     const shortCount = ordered.length - (firstShort < 0 ? ordered.length : firstShort);
     articles = ordered
-      .map((a, n) => (n === firstShort && hasLong ? `<section class="short-takes-opener"><h2>Short Takes</h2><p>${shortCount} short piece${shortCount === 1 ? '' : 's'}</p></section>\n` : '') + article(a, n, i, vars, n === firstShort))
+      .map((a, n) => (n === firstShort && hasLong ? `<section class="short-takes-opener"><h2>Short Takes</h2><p>${shortCount} short piece${shortCount === 1 ? '' : 's'}</p></section>\n` : '') + article(a, n, i, vars, n !== firstShort && runsOn(a, ordered[n - 1])))
       .join('\n');
   }
   const html = `<div class="book house-${house}${i.config.recto_starts ? ' recto-starts' : ''}">
