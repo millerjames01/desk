@@ -1,6 +1,9 @@
 /* The booklet page's own chrome. The booklet's typography is in src/read/house/. */
 
 html, body { margin: 0; padding: 0; }
+/* Print the cover's filled cells and rules from either print dialog: the
+   Mac's system dialog has no "Background graphics" switch, so ask here. */
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 body { background: #8a8d91; font: 13px/1.4 system-ui, sans-serif; }
 
 #bar {
