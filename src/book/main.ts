@@ -116,6 +116,14 @@ async function typeset(html: string, css: string): Promise<HTMLElement[]> {
   return [...pagesEl.querySelectorAll<HTMLElement>('.pagedjs_page')];
 }
 
+/** Steps smaller the contents and the sources may be set (see .tight-1, .tight-2). */
+const MAX_TIGHT = 2;
+
+/** How many pages hold part of an element. */
+function spans(pages: HTMLElement[], selector: string): number {
+  return pages.filter((p) => p.querySelector(selector)).length;
+}
+
 /** Short Takes whose heading lands with less than 40% of the page left below it. */
 function lateShortTakes(pages: HTMLElement[]): Set<string> {
   const late = new Set<string>();
@@ -272,19 +280,32 @@ async function main(): Promise<void> {
   say('Typesetting…');
   let out = renderIssue(input);
   let pages = await typeset(out.html, css + '\n' + out.css);
+  // The contents and the sources each read best on one page: set them a step
+  // smaller, twice at most, until each fits.
+  const tight = { contents: 0, sources: 0 };
+  for (let round = 0; round < MAX_TIGHT; round++) {
+    const more = { contents: spans(pages, '.contents') > 1, sources: spans(pages, '.colophon') > 1 };
+    if (!more.contents && !more.sources) break;
+    if (more.contents) tight.contents++;
+    if (more.sources) tight.sources++;
+    say('Typesetting again to fit the contents and the sources on a page each…');
+    clearPaged();
+    out = renderIssue({ ...input, tight });
+    pages = await typeset(out.html, css + '\n' + out.css);
+  }
   // A Short Take that would start in the bottom 40% of a page starts the next one instead.
   const late = lateShortTakes(pages);
   if (late.size) {
     say('Typesetting again to move short pieces that start low on a page…');
     clearPaged();
-    out = renderIssue({ ...input, breakBefore: late });
+    out = renderIssue({ ...input, tight, breakBefore: late });
     pages = await typeset(out.html, css + '\n' + out.css);
   }
   const pad = padCount(pages.length);
   if (pad) {
     say(`Typesetting again with ${pad} padding page${pad > 1 ? 's' : ''}…`);
     clearPaged();
-    out = renderIssue({ ...input, breakBefore: late, pad });
+    out = renderIssue({ ...input, tight, breakBefore: late, pad });
     pages = await typeset(out.html, css + '\n' + out.css);
   }
   const html = out.html;

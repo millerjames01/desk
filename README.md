@@ -104,7 +104,7 @@ The brief for the booklet is in [`design-reference/MARGINALIA-BRIEF.md`](design-
 
 Under *Other ways to print*: **Everything at once** (A4 landscape, two-sided, flip on short edge, scale 100 %, margins none; sheet 1 is the cover card, so load it first), and **Fronts** then **Backs** for a printer without two-sided printing (put the stack back printed side down between them).
 
-On paper the cover prints in black only; the card supplies the colour (set per issue). The inside of the card (pages 2 and the second to last) is left bare, so the contents and the sources sit whole on the paper and the card goes through the printer once. The interior is greyscale.
+On paper the cover prints in black only; the card supplies the colour (set per issue). The contents and the sources are each set a step smaller, twice at most, when they would run onto a second page. The inside of the card (pages 2 and the second to last) is left bare, so the contents and the sources sit whole on the paper and the card goes through the printer once. The interior is greyscale.
 
 ### Design rules kept from the brief
 

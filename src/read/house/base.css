@@ -187,6 +187,9 @@
 .pad-notes h2 { font-size: 9pt; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500; margin: 0 0 6mm; }
 .pad-notes .ruled { height: 150mm; background: repeating-linear-gradient(to bottom, transparent 0, transparent 7.5mm, #999 7.5mm, #999 7.75mm); }
 
+/* Set a step smaller when they would run onto a second page; zoom keeps each house's proportions. */
+.contents.tight-1, .colophon.tight-1 { zoom: 0.86; }
+.contents.tight-2, .colophon.tight-2 { zoom: 0.74; }
 .colophon { break-before: page; font-size: 8.75pt; line-height: 1.45; }
 .colophon-title { font-size: 14pt; font-weight: 400; margin: 0 0 4mm; }
 .colophon h3 { font-size: 8.5pt; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; margin: 7mm 0 3mm; }

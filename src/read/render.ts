@@ -24,6 +24,8 @@ export interface RenderInput {
   breakBefore?: Set<string>;
   /** The journal's mark in black, for the Grid cover. */
   markUrl?: string;
+  /** Steps smaller the contents and the sources are set so each fits a page (0–2). */
+  tight?: { contents: number; sources: number };
 }
 
 /** Long reads first, then Short Takes, each group in issue order. */
@@ -47,6 +49,8 @@ export function editionGroups(issue: Issue, articles: Article[]): EditionGroup[]
   for (const a of articles) (groups.find((g) => g.label === a.section) ?? groups[groups.length - 1]).articles.push(a);
   return groups.filter((g) => g.articles.length).map((g) => ({ ...g, articles: readingOrder(g.articles) }));
 }
+
+const tightClass = (step = 0) => (step ? ` tight-${Math.min(step, 2)}` : '');
 
 /** Under this, a Short Take is never split across pages. */
 export const KEEP_WHOLE_WORDS = 250;
@@ -246,7 +250,7 @@ function contents(i: RenderInput): string {
   if (groups) {
     let n = 0;
     const body = groups.map((g) => `<li class="toc-group"><span class="toc-group-title">${esc(g.label)}</span><ol class="toc toc-short">${g.articles.map((a) => row(a, ++n)).join('')}</ol></li>`).join('');
-    return `<section class="contents"><h2 class="contents-title">Contents</h2><ol class="toc">${body}</ol></section>`;
+    return `<section class="contents${tightClass(i.tight?.contents)}"><h2 class="contents-title">Contents</h2><ol class="toc">${body}</ol></section>`;
   }
   const long = i.articles.filter((a) => !a.shortTake);
   const short = i.articles.filter((a) => a.shortTake);
@@ -255,7 +259,7 @@ function contents(i: RenderInput): string {
   const group = short.length && long.length
     ? `<li class="toc-group"><span class="toc-group-title">Short Takes</span><ol class="toc toc-short">${short.map((a, n) => row(a, long.length + n + 1)).join('')}</ol></li>`
     : short.map((a, n) => row(a, n + 1)).join('');
-  return `<section class="contents"><h2 class="contents-title">Contents</h2><ol class="toc">${rows}${group}</ol></section>`;
+  return `<section class="contents${tightClass(i.tight?.contents)}"><h2 class="contents-title">Contents</h2><ol class="toc">${rows}${group}</ol></section>`;
 }
 
 function article(a: Article, n: number, i: RenderInput, vars: string[], runsOn = false, afterOpener = false): string {
@@ -341,7 +345,7 @@ function colophon(i: RenderInput, issueLabel: ReturnType<typeof labels>): string
     })
     .join('');
   const d = issueDate(i.issue.id);
-  return `<section class="colophon">
+  return `<section class="colophon${tightClass(i.tight?.sources)}">
 <h2 class="colophon-title">${esc(i.config.title)}</h2>
 <p>${esc(issueLabel.numberLabel)} · ${esc(d.month)}. ${esc(i.config.tagline)}.</p>
 <p>A private booklet for one reader, not for distribution. Every text is reproduced as published, unaltered.</p>
