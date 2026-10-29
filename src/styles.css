@@ -163,8 +163,11 @@ a.row:hover strong { color: var(--accent); }
 .house p { margin: 6px 0; }
 
 /* Editions */
-.editions { display: flex; flex-wrap: wrap; gap: 6px; }
-.editions .on { border-color: var(--accent); }
+.edition-list { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--line); }
+.edition-list li { border-bottom: 1px solid var(--line); }
+.edition-row { display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 10px 4px; cursor: pointer; color: var(--ink); }
+.edition-row.on { color: var(--accent); }
+input[type='checkbox'], input[type='radio'] { accent-color: var(--accent); }
 .eyebrow-small { margin: 8px 0 2px; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .checklist { list-style: none; padding: 0; margin: 0; columns: 2 260px; }
 .checklist li { break-inside: avoid; padding: 3px 0; }

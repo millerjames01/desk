@@ -104,6 +104,12 @@ describe('editions', () => {
     const p = profile('smokelong.com');
     const index = parseHtml('<html><body><main><a href="/issue-ninety-three/">Issue Ninety-Three</a><a href="/issue-ninety-two/">Issue Ninety-Two</a><a href="/about/">About</a></main></body></html>', p.edition.kind === 'issue' ? p.edition.index : '');
     expect(issueEditions(index, p).map((e) => e.label)).toEqual(['Issue Ninety-Three', 'Issue Ninety-Two']);
+    // The archive's links say only "Open this Issue"; the name and date are in the entry.
+    const archive = parseHtml(`<html><body><div id="covers">
+      <div class="issh"><a href="https://www.smokelong.com/issue-ninety-two/">Open this Issue</a><div class="qic"><img alt="Cover for Issue Ninety-Two"><p><span> Issue Ninety-Two </span> June 15, 2026 </p></div></div>
+      <div class="issh"><a href="https://www.smokelong.com/issue-ninety-one/">Open this Issue</a><div class="qic"><img alt="Cover for Issue Ninety-One"></div></div>
+      <div class="issh"><a href="https://www.smokelong.com/issue-ninety/">Open this Issue</a></div></div></body></html>`, 'https://www.smokelong.com/archives/quarterly/');
+    expect(issueEditions(archive, p).map((e) => [e.label, e.date])).toEqual([['Issue Ninety-Two', 'June 15, 2026'], ['Issue Ninety-One', undefined], ['Issue Ninety', undefined]]);
     const issue = parseHtml(`<html><body><nav><a href="/stories/in-the-menu/">Menu story</a></nav><main>
       <a href="https://www.smokelong.com/stories/horses/">Horses</a><a href="/stories/letter-from-the-editor-93/">Letter</a>
       <a href="/stories/horses/#comments">dup</a><a href="/stories/rendered/">Rendered</a><a href="https://elsewhere.com/stories/x/">x</a></main></body></html>`, 'https://www.smokelong.com/issue-ninety-three/');

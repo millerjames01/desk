@@ -35,6 +35,9 @@ export function ExtensionStatus({ version }: { version: string | null | undefine
  * all their stories. With "fill", Desk adds earlier editions until the
  * booklet reaches about the page target.
  */
+/** Editions listed before "Show older". */
+const SHOWN = 6;
+
 export function EditionBuilder({ data }: { data: Data }) {
   const ext = useExtension();
   const target = data.settings.book.target_pages;
@@ -45,6 +48,7 @@ export function EditionBuilder({ data }: { data: Data }) {
   const [pasted, setPasted] = useState('');
   const [stories, setStories] = useState<(StoryLink & { on: boolean })[] | null>(null);
   const [fill, setFill] = useState(true);
+  const [older, setOlder] = useState(false);
   const [busy, setBusy] = useState('');
   const [notice, show] = useNotice();
   useEffect(() => {
@@ -65,6 +69,7 @@ export function EditionBuilder({ data }: { data: Data }) {
   const reset = () => { setEditions(null); setStories(null); setSelected([]); };
 
   const findEditions = () => p && run('Reading the list of editions…', async () => {
+    setOlder(false);
     setEditions(await listEditions(p, await bestTransport(data.settings.proxies)));
     setSelected([]);
     setStories(null);
@@ -136,15 +141,30 @@ export function EditionBuilder({ data }: { data: Data }) {
       {notice}
       {editions && !stories && (
         <>
-          <div className="editions">
-            {editions.slice(0, 24).map((e) => (
-              <button key={e.url} className={selected.some((x) => x.url === e.url) ? 'on' : ''} disabled={!!busy} aria-pressed={selected.some((x) => x.url === e.url)} onClick={() => toggle(e)}>{e.label}</button>
-            ))}
-            {!editions.length && <p className="muted">No editions found on the index page.</p>}
-          </div>
+          {editions.length ? (
+            <ul className="edition-list">
+              {(older ? editions : editions.slice(0, SHOWN)).map((e, i) => {
+                const on = selected.some((x) => x.url === e.url);
+                return (
+                  <li key={e.url}>
+                    <label className={`edition-row${on ? ' on' : ''}`}>
+                      <input type="checkbox" checked={on} disabled={!!busy} onChange={() => toggle(e)} />
+                      <span className="grow">{e.label}</span>
+                      <span className="muted small">{e.date ?? (i === 0 ? 'latest' : '')}</span>
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="muted">No editions found on the index page.</p>
+          )}
+          {!older && editions.length > SHOWN && (
+            <button className="link" onClick={() => setOlder(true)}>Show {editions.length - SHOWN} older</button>
+          )}
           <div className="actions">
             <button className="primary" disabled={!!busy || !selected.length} onClick={() => findStories(selected)}>Find the stories</button>
-            <span className="muted small">{selected.length ? `${plural(selected.length, 'edition')} chosen.` : 'Choose one edition, or several to bind together.'}</span>
+            <span className="muted small">{selected.length ? `${plural(selected.length, 'edition')} chosen.` : 'Tick one, or several to bind together.'}</span>
           </div>
         </>
       )}

@@ -17,8 +17,16 @@ import type { Transport } from './transport';
 
 export async function listEditions(p: SiteProfile, t: Transport): Promise<Edition[]> {
   if (p.edition.kind === 'month') return monthEditions(p);
-  const html = await t.fetchText(p.edition.index);
-  return issueEditions(parseHtml(html, p.edition.index), p);
+  const index = issueEditions(parseHtml(await t.fetchText(p.edition.index), p.edition.index), p);
+  if (!p.edition.current) return index;
+  // The newest issue is often on the home page before the archive lists it.
+  const listed = new Set(index.map((e) => e.url));
+  try {
+    const newer = issueEditions(parseHtml(await t.fetchText(p.edition.current), p.edition.current), p).filter((e) => !listed.has(e.url));
+    return [...newer.slice(0, 1), ...index];
+  } catch {
+    return index;
+  }
 }
 
 /** The edition's stories, and the edition page's own title (for an address pasted in). */

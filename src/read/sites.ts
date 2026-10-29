@@ -16,8 +16,13 @@ export interface IssueEditions {
   kind: 'issue';
   /** Page that links to every issue. */
   index: string;
+  /** A page that links the newest issue when the index doesn't yet (often the home page). */
+  current?: string;
   /** Path pattern of an issue page. */
   editionPath: string;
+  /** Each issue's entry on the index, and where in it the issue's name is, when the link itself says only "Open". */
+  item?: string;
+  itemLabel?: string;
 }
 
 export interface MonthEditions {
@@ -90,7 +95,7 @@ export const DEFAULT_PROFILES: SiteProfile[] = [
     domain: 'smokelong.com',
     name: 'SmokeLong Quarterly',
     status: 'checked',
-    edition: { kind: 'issue', index: 'https://www.smokelong.com/archives/quarterly/', editionPath: '^/issue-[a-z-]+/?$' },
+    edition: { kind: 'issue', index: 'https://www.smokelong.com/archives/quarterly/', current: 'https://www.smokelong.com/', editionPath: '^/issue-[a-z-]+/?$', item: '.issh', itemLabel: '.qic span' },
     storyPath: '^/stories/[^/]+/?$',
     skipPath: ['^/stories/letter-from-the-editor'],
     story: {
@@ -192,6 +197,8 @@ export interface Edition {
   url: string;
   /** For month editions: yyyy-mm. */
   month?: string;
+  /** When the index gives one: the issue's date, as printed. */
+  date?: string;
 }
 
 export interface StoryLink {
@@ -227,18 +234,40 @@ function sameSite(href: string, p: SiteProfile): boolean {
 }
 
 /** Issue links on the profile's index page, in page order. */
+/** Link text that names nothing: "Open this Issue", "Read more", "View". */
+const GENERIC_LINK = /^(open|read|view|see|go to|click|continue|more)\b|^this issue$/i;
+const PRINTED_DATE = /\b(January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}, \d{4}\b/;
+
+/**
+ * Issues linked from an index page, in its order (newest first, as journals
+ * list them). An issue's name is its link text, or, when that says only
+ * "Open this Issue", the profile's label inside its entry, the cover's alt
+ * text, or its address.
+ */
 export function issueEditions(doc: Document, p: SiteProfile): Edition[] {
   const e = p.edition as IssueEditions;
   const re = new RegExp(e.editionPath);
-  const seen = new Set<string>();
-  const out: Edition[] = [];
+  const byUrl = new Map<string, Edition>();
   for (const a of doc.querySelectorAll('a[href]')) {
     const url = new URL(a.getAttribute('href')!, doc.baseURI).href.split('#')[0];
-    if (!sameSite(url, p) || !re.test(new URL(url).pathname) || seen.has(url)) continue;
-    seen.add(url);
-    out.push({ label: text(a) || prettySlug(new URL(url).pathname), url });
+    if (!sameSite(url, p) || !re.test(new URL(url).pathname)) continue;
+    const entry = e.item ? a.closest(e.item) : null;
+    const own = text(a);
+    const named = own && !GENERIC_LINK.test(own) ? own : '';
+    const label = named
+      || (entry && e.itemLabel ? text(entry.querySelector(e.itemLabel)) : '')
+      || (a.querySelector('img') ?? entry?.querySelector('img'))?.getAttribute('alt')?.replace(/^cover (for|of)\s+/i, '').trim()
+      || '';
+    const date = text(entry ?? a).match(PRINTED_DATE)?.[0];
+    const known = byUrl.get(url);
+    if (known) {
+      if (label && known.label === prettySlug(new URL(url).pathname)) known.label = label;
+      known.date ??= date;
+      continue;
+    }
+    byUrl.set(url, { label: label || prettySlug(new URL(url).pathname), url, ...(date ? { date } : {}) });
   }
-  return out;
+  return [...byUrl.values()];
 }
 
 function isStory(url: string, p: SiteProfile): boolean {
