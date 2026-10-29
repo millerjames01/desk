@@ -135,8 +135,8 @@ function lateShortTakes(pages: HTMLElement[]): Set<string> {
 function markPages(pages: HTMLElement[], house: HouseStyle, coverColour: string): void {
   for (const p of pages) {
     p.classList.add(HOUSE_SHORT[house]);
-    // On screen the cover page shows the card's colour edge to edge.
-    if (p.querySelector('.cover')) p.style.setProperty('--card', coverColour);
+    // On screen the card's four pages (cover, its inside, the back) show its colour edge to edge.
+    if (p.querySelector('.cover, .inside-cover, .back-cover')) p.style.setProperty('--card', coverColour);
     if (p.querySelector('.article:not(.short) .article-head, .short-takes-opener, .edition-opener')) p.classList.add('opener');
     if (p.querySelector('.pad')) p.classList.add('pad-page');
   }
@@ -248,7 +248,7 @@ const TIPS: Record<string, string> = {
   booklet: 'Print on A4 landscape, two-sided, flip on short edge. Margins: none, scale 100%. Sheet 1 is the cover card.',
   fronts: 'Manual duplex, step 1: print these, then put the stack back in the tray printed side down, top edge first.',
   backs: 'Manual duplex, step 2: these run in reverse so the stack goes straight back in.',
-  cover: 'The cover card: two sides. Card won’t go through two-sided printing, so print page 1 only, put the card back in the tray turned over, then print page 2.',
+  cover: 'The cover card: the outside only, one side, landscape. The inside stays bare card.',
   interior: 'Every sheet inside the cover: plain A4, landscape, two-sided, flip on short edge, scale 100%, margins none.',
   sheet: 'Every page at a glance. Look for odd breaks, stranded heads and empty pages.',
 };

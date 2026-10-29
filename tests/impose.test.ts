@@ -27,7 +27,7 @@ describe('imposition', () => {
   });
 
   it('cover card is sheet 0; interior is the rest', () => {
-    expect(sidesFor(12, 'cover').map((s) => [s.left, s.right])).toEqual([[12, 1], [2, 11]]);
+    expect(sidesFor(12, 'cover').map((s) => [s.left, s.right])).toEqual([[12, 1]]);
     expect(sidesFor(12, 'interior').every((s) => s.sheet > 0)).toBe(true);
   });
 

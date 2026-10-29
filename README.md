@@ -98,13 +98,13 @@ The brief for the booklet is in [`design-reference/MARGINALIA-BRIEF.md`](design-
 ### Printing
 
 1. Open an issue → **Typeset and check**. Fix anything red; the list says what and where, here and in the print window.
-2. Under **Print the booklet**: **Pages** on plain A4 (two-sided, flip on the short edge), then **Cover** on one sheet of card, a side at a time.
+2. Under **Print the booklet**: **Pages** on plain A4 (two-sided, flip on the short edge), then **Cover** on one sheet of card, one side only.
 
 3. Fold, two staples through the fold, read.
 
 Under *Other ways to print*: **Everything at once** (A4 landscape, two-sided, flip on short edge, scale 100 %, margins none; sheet 1 is the cover card, so load it first), and **Fronts** then **Backs** for a printer without two-sided printing (put the stack back printed side down between them).
 
-On paper the cover prints in black only; the card supplies the colour (set per issue). The interior is greyscale.
+On paper the cover prints in black only; the card supplies the colour (set per issue). The inside of the card (pages 2 and the second to last) is left bare, so the contents and the sources sit whole on the paper and the card goes through the printer once. The interior is greyscale.
 
 ### Design rules kept from the brief
 

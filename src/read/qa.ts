@@ -187,7 +187,7 @@ export function runQa({ pages, source, articles }: QaInput): QaItem[] {
       const intentional = page.classList.contains('pagedjs_blank_page') || !!area.querySelector('.pad');
       items.push(
         intentional
-          ? { level: 'note', check: 'blank', page: num, message: page.classList.contains('pagedjs_blank_page') ? 'Blank so the next article starts on a right-hand page.' : 'Blank padding to a multiple of 4 pages.' }
+          ? { level: 'note', check: 'blank', page: num, message: page.classList.contains('pagedjs_blank_page') ? 'Blank so the next article starts on a right-hand page.' : area.querySelector('.inside-cover') ? 'Inside of the cover card, left bare.' : 'Blank padding to a multiple of 4 pages.' }
           : { level: 'error', check: 'blank', page: num, message: 'Unintended blank page.' },
       );
     }

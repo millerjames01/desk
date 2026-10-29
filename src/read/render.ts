@@ -356,6 +356,12 @@ export interface Rendered {
   css: string;
 }
 
+/**
+ * The inside faces of the cover card stay bare, so the contents and the
+ * sources sit whole on the paper inside and the card prints on one side.
+ */
+const INSIDE_COVER = '<section class="pad inside-cover"><p class="pad-fill">&nbsp;</p></section>';
+
 export function renderIssue(i: RenderInput): Rendered {
   const house = i.config.house_style;
   const issueLabel = labels(house, i.config.title, i.number, i.issue.source && editionNumber(i.issue.source, i.issue.id));
@@ -385,10 +391,12 @@ export function renderIssue(i: RenderInput): Rendered {
   }
   const html = `<div class="book house-${house}${i.config.recto_starts ? ' recto-starts' : ''}">
 ${cover({ ...i, articles: ordered }, issueLabel).replace('<div class="cover-top">', `<div class="cover-top"><span class="rh-issue">${esc(issueLabel.mark)}</span>`)}
+${INSIDE_COVER}
 ${contents({ ...i, articles: ordered })}
 ${articles}
 ${pads}
 ${colophon({ ...i, articles: ordered }, issueLabel)}
+${INSIDE_COVER}
 <section class="back-cover"><div class="back-mark">${esc(issueLabel.mark)}</div></section>
 </div>`;
   return { html, css: vars.join('\n') };

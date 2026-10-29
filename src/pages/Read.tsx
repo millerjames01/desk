@@ -303,7 +303,7 @@ function PrintSteps({ issueId, ok, checked }: { issueId: string; ok: boolean; ch
       {!ok && <p className="muted small">{checked ? 'Fix the errors above and typeset again first.' : 'Typeset and check first.'}</p>}
       <ol>
         <li>{link('interior', 'Pages', true)} <span className="muted small">Plain A4, landscape, two-sided, flip on the short edge.</span></li>
-        <li>{link('cover', 'Cover')} <span className="muted small">One sheet of card, two sides: print page 1, put the card back turned over, then print page 2.</span></li>
+        <li>{link('cover', 'Cover')} <span className="muted small">One sheet of card, one side only. Its inside stays bare.</span></li>
         <li><span className="muted small">Fold each sheet, nest them in the cover, staple twice through the fold.</span></li>
       </ol>
       <details className="small">

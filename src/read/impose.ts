@@ -33,8 +33,8 @@ export type Layout = 'booklet' | 'fronts' | 'backs' | 'cover' | 'interior';
  * - booklet: every side, for printers that duplex on their own
  * - fronts, then backs: for manual duplex. Backs run in reverse so the
  *   printed stack goes straight back in, flipped
- * - cover / interior: the card sheet alone, or everything inside it, when the
- *   card has to go through a different tray
+ * - cover / interior: the card's outside alone (its inside is left bare),
+ *   or everything inside it, when the card has to go through a different tray
  */
 export function sidesFor(total: number, layout: Layout): Side[] {
   const all = sides(total);
@@ -46,7 +46,7 @@ export function sidesFor(total: number, layout: Layout): Side[] {
     case 'backs':
       return all.filter((s) => s.face === 'back').reverse();
     case 'cover':
-      return all.filter((s) => s.sheet === 0);
+      return all.filter((s) => s.sheet === 0 && s.face === 'front');
     case 'interior':
       return all.filter((s) => s.sheet > 0);
   }
