@@ -10,8 +10,8 @@
 
 import { AGENT, MIN_GAP_MS, crawlDelay, isAllowed, parseRobots } from './robots.js';
 
-const DESK_URLS = ['https://millerjames01.github.io/desk/*', 'http://localhost/*', 'http://127.0.0.1/*'];
-const DESK_HOME = 'https://millerjames01.github.io/desk/#/read';
+const DESK_URLS = ['https://desk.jimmiller.dev/*', 'https://millerjames01.github.io/desk/*', 'http://localhost/*', 'http://127.0.0.1/*'];
+const DESK_HOME = 'https://desk.jimmiller.dev/#/read';
 const UA = `Mozilla/5.0 (compatible; ${AGENT}/${chrome.runtime.getManifest().version}; personal reading, one request per few seconds; +https://github.com/millerjames01/desk)`;
 const CACHE = 'desk-pages-v1';
 const MAX_AGE_MS = 30 * 24 * 3600 * 1000;
