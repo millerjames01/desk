@@ -10,14 +10,15 @@ A one-person desk for a reading and writing practice. Three rooms:
 
 The **Desk** page shows one thing to do, not a list: write (always first, until you have today), read the next article in a printed issue, print the issue, send a ready piece, or query a journal that's overdue. *Something else* swaps it for the next one, for today only. Underneath, one quiet line: this week's days and how many in a row you've written. Those days come from the record (a version saved, pages captured, an article read, a submission sent); nothing is stored, so there's nothing to pad.
 
-Everything runs in the browser and lives in IndexedDB on the device. There is no backend and no account. It is hosted on GitHub Pages and installs to a phone's home screen.
+Everything runs in the browser and lives in IndexedDB on the device. There is no backend. It is hosted on Cloudflare at its own address behind the Homestead login (Cloudflare Access), and installs to a phone's home screen.
 
 ## Use it
 
-**https://millerjames01.github.io/desk/**
+**https://desk.jimmiller.dev/**
 
 - **Install it.** iPhone: Safari → Share → *Add to Home Screen*. Android: Chrome menu → *Install app*.
 - **Keep it.** Settings → *Ask the browser to keep my data*, then *Download a backup* now and then. The data lives only in this browser.
+- **Moving from the old address.** Desk used to live at `millerjames01.github.io/desk/`. A new address starts empty: on each device, *Download a backup* at the old address, then *Merge a backup* at the new one.
 - **Offline.** After the first visit the app works without a connection. Fetching articles, Claude, and Tesseract's first download need one.
 
 ## Read: booklets of editions
@@ -137,7 +138,7 @@ export default {
     if (!url) return new Response('?url=', { status: 400 });
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DeskReader/0.1; personal reading)' } });
     const out = new Response(res.body, res);
-    out.headers.set('Access-Control-Allow-Origin', 'https://millerjames01.github.io');
+    out.headers.set('Access-Control-Allow-Origin', 'https://desk.jimmiller.dev');
     return out;
   },
 };
